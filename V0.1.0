@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aetheria — The World After The End</title>
+    <style>
+        :root {
+            --bg-dark: #121620;
+            --bg-panel: #1a2234;
+            --border-color: #313d56;
+            --border-glow: #526c9c;
+            --text-main: #d1dbed;
+            --text-bright: #ffffff;
+            --text-dim: #8fa1c7;
+            --accent-gold: #f3d060;
+            --accent-gold-glow: rgba(243, 208, 96, 0.3);
+            --accent-red-bright: #ff5555;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: radial-gradient(circle at center, #1c263b 0%, #121620 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .ambient-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(18,22,32,0.85) 0%, rgba(18,22,32,0.98) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease-in-out;
+            padding: 20px;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        h1, h2, h3 {
+            color: var(--text-bright);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .frame-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            border-radius: 8px;
+            padding: 35px;
+            max-width: 750px;
+            width: 100%;
+            position: relative;
+        }
+
+        .menu-btn {
+            background: #232f46;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 14px 25px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            text-transform: uppercase;
+            border-radius: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .menu-btn:hover:not(:disabled) {
+            border-color: var(--accent-gold);
+            color: var(--text-bright);
+            background: #2b3a56;
+            box-shadow: 0 0 12px var(--accent-gold-glow);
+            transform: translateY(-1px);
+        }
+
+        .menu-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .menu-btn:disabled {
+            color: #52607d;
+            border-color: #1a2333;
+            cursor: not-allowed;
+            background: rgba(26, 35, 51, 0.4);
+        }
+
+        .menu-btn.danger:hover:not(:disabled) {
+            border-color: var(--accent-red-bright);
+            background: rgba(255, 85, 85, 0.15);
+            box-shadow: 0 0 12px rgba(255, 85, 85, 0.3);
+        }
+
+        /* Title Screen */
+        .title-logo {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--text-bright);
+            text-align: center;
+            letter-spacing: 6px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 25px rgba(255,255,255,0.25);
+        }
+
+        .title-subtitle {
+            font-size: 1.05rem;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+            text-align: center;
+            margin-bottom: 45px;
+            text-transform: uppercase;
+        }
+
+        .menu-container {
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Story Screen */
+        .story-box {
+            min-height: 240px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 4px 8px 8px 4px;
+        }
+
+        .story-text {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: var(--text-bright);
+            margin-bottom: 30px;
+            min-height: 130px;
+            white-space: pre-line;
+            text-align: center;
+        }
+
+        .story-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        /* Input Screen */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-bright);
+            padding: 14px;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 2px;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.25s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        .error-msg {
+            color: var(--accent-red-bright);
+            font-size: 0.9rem;
+            text-align: center;
+            height: 20px;
+            font-weight: 500;
+        }
+
+        /* Main Hub Screen */
+        .hub-container {
+            display: grid;
+            grid-template-columns: 1.2fr 2fr;
+            gap: 20px;
+            width: 950px;
+            max-width: 100%;
+        }
+
+        .hub-panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .player-info {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 18px;
+        }
+
+        .player-info h3 {
+            color: var(--accent-gold);
+            margin-bottom: 12px;
+            font-size: 1.25rem;
+            text-align: left;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            margin: 8px 0;
+            color: var(--text-dim);
+        }
+
+        .info-row span {
+            color: var(--text-bright);
+            font-weight: 600;
+        }
+
+        .locked-notice {
+            font-size: 0.75rem;
+            color: var(--accent-red-bright);
+            text-align: center;
+            margin-top: 3px;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .btn-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Slots Grid */
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-height: 420px;
+            overflow-y: auto;
+            margin: 15px 0;
+            padding-right: 5px;
+        }
+
+        .slots-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .slots-grid::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .slot-card {
+            background: #151c2c;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .slot-card:hover {
+            border-color: var(--accent-gold);
+            background: #1a243a;
+        }
+
+        .slot-card.empty {
+            color: var(--text-dim);
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slot-title {
+            color: var(--accent-gold);
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+
+        .slot-detail {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(12, 15, 22, 0.85);
+            backdrop-filter: blur(3px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--accent-gold);
+            border-radius: 8px;
+            padding: 35px;
+            width: 420px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(243, 208, 96, 0.15);
+        }
+
+        .modal-text {
+            margin-bottom: 25px;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: var(--text-bright);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="ambient-bg"></div>
+
+    <!-- 1. TITLE SCREEN -->
+    <div id="screen-title" class="screen active">
+        <div class="title-logo">AETHERIA</div>
+        <div class="title-subtitle">The World After The End</div>
+        <div class="menu-container">
+            <button class="menu-btn" id="btn-new-game">New Game</button>
+            <button class="menu-btn" id="btn-continue" disabled>Continue</button>
+            <button class="menu-btn" id="btn-load-save">Load / Save</button>
+            <button class="menu-btn" id="btn-settings">Settings</button>
+            <button class="menu-btn danger" id="btn-exit">Exit</button>
+        </div>
+    </div>
+
+    <!-- 2. STORY INTRODUCTION SCREEN -->
+    <div id="screen-story" class="screen">
+        <div class="frame-box story-box">
+            <div id="story-content" class="story-text">Loading story...</div>
+            <div class="story-controls">
+                <button class="menu-btn" id="btn-story-skip" style="width: 30%;">Skip</button>
+                <button class="menu-btn" id="btn-story-next" style="width: 68%;">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MASTER CREATION SCREEN -->
+    <div id="screen-creation" class="screen">
+        <div class="frame-box" style="max-width: 460px; text-align: center;">
+            <h2>Master Creation</h2>
+            <p style="margin: 18px 0; font-size: 0.95rem; color: var(--text-dim); line-height: 1.6;">
+                The Game Master System requires your identification.<br>Enter the name of the Master.
+            </p>
+            <div class="input-group">
+                <input type="text" id="input-master-name" placeholder="ENTER NAME (3-20 CHARS)" maxlength="20">
+                <div id="name-error" class="error-msg"></div>
+                <button class="menu-btn" id="btn-confirm-name">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. MAIN HUB SCREEN -->
+    <div id="screen-hub" class="screen">
+        <div class="hub-container">
+            <!-- Left Panel: Status & Info -->
+            <div class="hub-panel">
+                <div class="player-info">
+                    <h3 id="hub-master-name">MASTER</h3>
+                    <div class="info-row">ID: <span id="hub-master-id">MASTER-000001</span></div>
+                    <div class="info-row">Ranking: <span id="hub-master-rank">F-Rank</span></div>
+                    <div class="info-row">Tower Progress: <span id="hub-tower-prog">Floor 0 / 100</span></div>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.7;">
+                    SYSTEM STATUS: <span style="color: #4cd137; font-weight: 600;">ONLINE</span><br>
+                    FAIRY STATUS: <span style="color: var(--accent-gold); font-weight: 600;">STANDBY</span><br>
+                    WORLD DESTRUCTION: <span style="color: var(--accent-red-bright); font-weight: 600;">100%</span>
+                </div>
+            </div>
+
+            <!-- Right Panel: Restricted Core Menu Options -->
+            <div class="hub-panel">
+                <h3 style="font-size: 1.05rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; text-align: left;">Master Commands</h3>
+                <div class="btn-wrapper">
+                    <div>
+                        <button class="menu-btn" disabled>Master Status</button>
+                        <div class="locked-notice">ACCESS RESTRICTED</div>
+                    </div>
+                    <div>
+                        <button class="menu-btn" disabled>Recruitment</button>
+                        <div class="locked-notice">ACCESS RESTRICTED</div>
+                    </div>
+                    <div>
+                        <button class="menu-btn" disabled>Hero Roster</button>
+                        <div class="locked-notice">ACCESS RESTRICTED</div>
+                    </div>
+                    <div>
+                        <button class="menu-btn" disabled>Party Management</button>
+                        <div class="locked-notice">ACCESS RESTRICTED</div>
+                    </div>
+                    <div>
+                        <button class="menu-btn" disabled>Inventory</button>
+                        <div class="locked-notice">ACCESS RESTRICTED</div>
+                    </div>
+                    <div>
+                        <button class="menu-btn" disabled>Town Square</button>
+                        <div class="locked-notice">ACCESS RESTRICTED</div>
+                    </div>
+                    <div>
+                        <button class="menu-btn" disabled>Dungeon</button>
+                        <div class="locked-notice">ACCESS RESTRICTED</div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <button class="menu-btn" id="hub-load-save">Load / Save</button>
+                    </div>
+                    <div>
+                        <button class="menu-btn danger" id="hub-logout">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. LOAD / SAVE MENU SCREEN -->
+    <div id="screen-load-save" class="screen">
+        <div class="frame-box" style="max-width: 680px;">
+            <h2 id="slots-header" style="margin-bottom: 15px;">Load / Save Menu</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;" id="slot-mode-btns">
+                <button class="menu-btn" id="btn-mode-load" style="margin:0;">Load Game</button>
+                <button class="menu-btn" id="btn-mode-save" style="margin:0;">Save Game</button>
+                <button class="menu-btn danger" id="btn-mode-delete" style="margin:0;">Delete Save</button>
+            </div>
+            <div class="slots-grid" id="slots-container">
+                <!-- Dynamically filled slots 1-10 -->
+            </div>
+            <button class="menu-btn" id="btn-slots-back" style="margin-top: 15px;">Back</button>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP OVERLAY -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modal-text" class="modal-text">Confirmation Message</div>
+            <div class="modal-actions">
+                <button class="menu-btn" id="modal-btn-confirm" style="margin:0;">Confirm</button>
+                <button class="menu-btn" id="modal-btn-cancel" style="margin:0;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- GAME STATE ---
+    const GAME_STATE_KEY = "aetheria_game_saves_v1";
+    
+    let gameState = {
+        currentScreen: 'title',
+        masterName: '',
+        masterId: '',
+        highestFloor: 0,
+        masterRank: 'F-Rank',
+        playTime: 0,
+        createdAt: '',
+        lastSaved: ''
+    };
+
+    let activeSaveSlot = null;
+    let slotMode = 'load';
+    let previousScreen = 'title';
+
+    // --- STORY SCENARIOS ---
+    const storySteps = [
+        "THE WORLD HAS ALREADY ENDED.",
+        "Aetheria once stood as a vast fantasy world.\n\nKingdoms flourished. Civilizations expanded. Magic filled the world.\n\nHumans. Elves. Dwarves. Beastfolk. Dragonkin. Demons. Merfolk.\n\nCountless races lived within Aetheria.",
+        "But everything changed.",
+        "For thousands of years,\nNythar, the Dark God,\nremained sealed away.",
+        "But the seal was eventually broken.\n\nThe Cult of Eternal Night\nhad succeeded.\n\nNythar returned.",
+        "Reality itself began to collapse.\n\nCities fell. Kingdoms disappeared. Forests died. The seas became corrupted. Mana became unstable. Civilization collapsed. Millions died.",
+        "AETHERIA FELL.",
+        "NYTHAR\n\nTHE DARK GOD\n\nNythar does not seek to rule the world.\nHe seeks something far more extreme.\nThe return of the world to nothingness.",
+        "To Nythar,\n\nlife, emotion, civilization, and free will\nare only temporary anomalies.\n\nEverything must eventually return to darkness.",
+        "Then...\n\nA tower appeared.\n\nTHE TOWER OF REBIRTH\n\n100 FLOORS.\n\nNo one knows who created it. No one knows why it appeared. But one truth became clear:\n\nThe Tower is the only known path toward Nythar.",
+        "And then...\n\nThe Game Master System\nselected someone.\n\nYOU.\n\nTHE MASTER",
+        "You have no known history. You have no kingdom. You have no army. You have no legendary weapon.\n\nBut you have been given one final opportunity.\n\nClimb the Tower. Gather the survivors. Discover the truth. Reach Floor 100. Defeat Nythar.",
+        "GAME MASTER SYSTEM\n\nINITIALIZING...\nWORLD STATUS: DESTROYED\nMASTER SELECTION: COMPLETE\nTOWER STATUS: ACTIVE\n\nAetheria has fallen. The final possibility remains.\nYou have been selected as THE MASTER.",
+        "THE PACT\n\nThe Game Master System has made an agreement with Nythar.\n\nREACH FLOOR 100\n↓\nDEFEAT NYTHAR\n↓\nTHE PACT IS FULFILLED\n↓\nTHE WORLD MAY BE REBORN\n\nBut if you fail... Aetheria remains lost."
+    ];
+    let currentStoryIndex = 0;
+
+    const screens = {
+        title: document.getElementById('screen-title'),
+        story: document.getElementById('screen-story'),
+        creation: document.getElementById('screen-creation'),
+        hub: document.getElementById('screen-hub'),
+        loadSave: document.getElementById('screen-load-save')
+    };
+
+    function calculateRank(floor) {
+        // Ranking changes every 10 floors completed
+        const ranks = ['F-Rank', 'E-Rank', 'D-Rank', 'C-Rank', 'B-Rank', 'A-Rank', 'S-Rank', 'SS-Rank', 'SSS-Rank', 'EX-Rank', 'God-Rank'];
+        let tierIndex = Math.floor(floor / 10);
+        if (tierIndex >= ranks.length) tierIndex = ranks.length - 1;
+        return ranks[tierIndex];
+    }
+
+    function getAllSaves() {
+        let saves = localStorage.getItem(GAME_STATE_KEY);
+        if (!saves) {
+            let emptySaves = {};
+            for (let i = 1; i <= 10; i++) {
+                emptySaves[i] = null;
+            }
+            localStorage.setItem(GAME_STATE_KEY, JSON.stringify(emptySaves));
+            return emptySaves;
+        }
+        return JSON.parse(saves);
+    }
+
+    function saveAllSaves(saves) {
+        localStorage.setItem(GAME_STATE_KEY, JSON.stringify(saves));
+    }
+
+    function checkContinueAvailability() {
+        let saves = getAllSaves();
+        let hasData = Object.values(saves).some(save => save !== null);
+        const btnContinue = document.getElementById('btn-continue');
+        btnContinue.disabled = !hasData;
+    }
+
+    function switchScreen(screenName) {
+        Object.values(screens).forEach(s => s.classList.remove('active'));
+        if (screens[screenName]) {
+            screens[screenName].classList.add('active');
+            gameState.currentScreen = screenName;
+        }
+    }
+
+    document.getElementById('btn-new-game').addEventListener('click', () => {
+        currentStoryIndex = 0;
+        loadStoryStep();
+        switchScreen('story');
+    });
+
+    document.getElementById('btn-continue').addEventListener('click', () => {
+        let saves = getAllSaves();
+        let targetSlot = null;
+        for (let i = 1; i <= 10; i++) {
+            if (saves[i]) {
+                targetSlot = i;
+                break;
+            }
+        }
+        if (targetSlot) {
+            loadGameFromSlot(targetSlot);
+        }
+    });
+
+    document.getElementById('btn-load-save').addEventListener('click', () => {
+        previousScreen = 'title';
+        openLoadSaveMenu('manage');
+    });
+
+    document.getElementById('btn-settings').addEventListener('click', () => {
+        showModal("Settings configuration is currently unavailable in this sector.", () => closeModal(), false);
+    });
+
+    document.getElementById('btn-exit').addEventListener('click', () => {
+        showModal("Are you sure you want to terminate the session?", () => {
+            window.close();
+            alert("Session terminated. You may now close this browser tab.");
+        }, true);
+    });
+
+    function loadStoryStep() {
+        const contentDiv = document.getElementById('story-content');
+        if (currentStoryIndex < storySteps.length) {
+            contentDiv.innerText = storySteps[currentStoryIndex];
+        } else {
+            switchScreen('creation');
+        }
+    }
+
+    document.getElementById('btn-story-next').addEventListener('click', () => {
+        currentStoryIndex++;
+        loadStoryStep();
+    });
+
+    document.getElementById('btn-story-skip').addEventListener('click', () => {
+        currentStoryIndex = storySteps.length - 1;
+        loadStoryStep();
+    });
+
+    document.getElementById('btn-confirm-name').addEventListener('click', () => {
+        const nameInput = document.getElementById('input-master-name');
+        const errorDiv = document.getElementById('name-error');
+        const name = nameInput.value.trim();
+
+        if (name.length < 3 || name.length > 20) {
+            errorDiv.innerText = "Name must be between 3 and 20 characters.";
+            return;
+        }
+
+        errorDiv.innerText = "";
+        
+        gameState.masterName = name;
+        gameState.masterId = "MASTER-" + Math.floor(100000 + Math.random() * 900000);
+        gameState.highestFloor = 0;
+        gameState.masterRank = calculateRank(gameState.highestFloor);
+        gameState.playTime = 0;
+        gameState.createdAt = new Date().toISOString().split('T')[0];
+        gameState.lastSaved = new Date().toISOString().split('T')[0];
+
+        let saves = getAllSaves();
+        let targetSlot = 1;
+        for (let i = 1; i <= 10; i++) {
+            if (!saves[i]) {
+                targetSlot = i;
+                break;
+            }
+        }
+        saves[targetSlot] = gameState;
+        saveAllSaves(saves);
+        activeSaveSlot = targetSlot;
+
+        initializeHubUI();
+        switchScreen('hub');
+    });
+
+    function initializeHubUI() {
+        document.getElementById('hub-master-name').innerText = gameState.masterName;
+        document.getElementById('hub-master-id').innerText = gameState.masterId;
+        document.getElementById('hub-master-rank').innerText = gameState.masterRank;
+        document.getElementById('hub-tower-prog').innerText = `Floor ${gameState.highestFloor} / 100`;
+    }
+
+    document.getElementById('hub-load-save').addEventListener('click', () => {
+        previousScreen = 'hub';
+        openLoadSaveMenu('manage');
+    });
+
+    document.getElementById('hub-logout').addEventListener('click', () => {
+        previousScreen = 'hub';
+        slotMode = 'logout';
+        openLoadSaveMenu('logout');
+    });
+
+    function openLoadSaveMenu(mode) {
+        slotMode = mode;
+        renderSlots();
+        switchScreen('loadSave');
+        
+        const modeBtns = document.getElementById('slot-mode-btns');
+        const header = document.getElementById('slots-header');
+
+        if (mode === 'logout') {
+            modeBtns.classList.add('hidden');
+            header.innerText = "Logout — Select Save Slot";
+        } else {
+            modeBtns.classList.remove('hidden');
+            header.innerText = "Load / Save Menu";
+        }
+    }
+
+    document.getElementById('btn-mode-load').addEventListener('click', () => slotMode = 'load');
+    document.getElementById('btn-mode-save').addEventListener('click', () => slotMode = 'save');
+    document.getElementById('btn-mode-delete').addEventListener('click', () => slotMode = 'delete');
+
+    document.getElementById('btn-slots-back').addEventListener('click', () => {
+        if (previousScreen === 'hub') {
+            switchScreen('hub');
+        } else {
+            checkContinueAvailability();
+            switchScreen('title');
+        }
+    });
+
+    function renderSlots() {
+        const container = document.getElementById('slots-container');
+        container.innerHTML = '';
+        let saves = getAllSaves();
+
+        for (let i = 1; i <= 10; i++) {
+            let slotData = saves[i];
+            let card = document.createElement('div');
+            card.className = 'slot-card';
+
+            if (!slotData) {
+                card.classList.add('empty');
+                card.innerHTML = `<div>SLOT ${i}<br><span style="font-size: 0.8rem;">EMPTY SLOT</span></div>`;
+            } else {
+                // Pastikan rank konsisten jika save data lama belum memiliki masterRank
+                let currentRank = slotData.masterRank || calculateRank(slotData.highestFloor || 0);
+                card.innerHTML = `
+                    <div class="slot-title">SLOT ${i}</div>
+                    <div class="slot-detail">
+                        Master: ${slotData.masterName}<br>
+                        Rank: ${currentRank} | Floor: ${slotData.highestFloor}<br>
+                        Saved: ${slotData.lastSaved}
+                    </div>
+                `;
+            }
+
+            card.addEventListener('click', () => handleSlotClick(i, slotData));
+            container.appendChild(card);
+        }
+    }
+
+    function handleSlotClick(slotNum, slotData) {
+        if (slotMode === 'logout') {
+            let actionText = slotData ? `Slot ${slotNum} already contains data. Overwrite with current progress?` : `Save current progress to Slot ${slotNum}?`;
+            showModal(actionText, () => {
+                saveGameToSlot(slotNum);
+                closeModal();
+                checkContinueAvailability();
+                switchScreen('title');
+            }, true);
+        } else if (slotMode === 'load') {
+            if (!slotData) {
+                showModal("This slot is empty.", () => closeModal(), false);
+            } else {
+                showModal(`Load save from Slot ${slotNum}?`, () => {
+                    loadGameFromSlot(slotNum);
+                    closeModal();
+                }, true);
+            }
+        } else if (slotMode === 'save') {
+            let actionText = slotData ? `Overwrite Slot ${slotNum} with current game state?` : `Save game to Slot ${slotNum}?`;
+            showModal(actionText, () => {
+                saveGameToSlot(slotNum);
+                closeModal();
+                renderSlots();
+            }, true);
+        } else if (slotMode === 'delete') {
+            if (!slotData) {
+                showModal("This slot is already empty.", () => closeModal(), false);
+            } else {
+                showModal(`Delete save data in Slot ${slotNum}?<br>This action cannot be undone.`, () => {
+                    let saves = getAllSaves();
+                    saves[slotNum] = null;
+                    saveAllSaves(saves);
+                    closeModal();
+                    renderSlots();
+                    checkContinueAvailability();
+                }, true);
+            }
+        }
+    }
+
+    function saveGameToSlot(slotNum) {
+        gameState.masterRank = calculateRank(gameState.highestFloor);
+        gameState.lastSaved = new Date().toISOString().split('T')[0];
+        let saves = getAllSaves();
+        saves[slotNum] = JSON.parse(JSON.stringify(gameState));
+        saveAllSaves(saves);
+        activeSaveSlot = slotNum;
+    }
+
+    function loadGameFromSlot(slotNum) {
+        let saves = getAllSaves();
+        if (saves[slotNum]) {
+            gameState = JSON.parse(JSON.stringify(saves[slotNum]));
+            // Kalkulasi ulang rank jika properti lama belum ada
+            gameState.masterRank = calculateRank(gameState.highestFloor || 0);
+            activeSaveSlot = slotNum;
+            initializeHubUI();
+            switchScreen('hub');
+        }
+    }
+
+    function showModal(text, onConfirm, showCancel = true) {
+        const overlay = document.getElementById('modal-overlay');
+        const modalText = document.getElementById('modal-text');
+        const btnConfirm = document.getElementById('modal-btn-confirm');
+        const btnCancel = document.getElementById('modal-btn-cancel');
+
+        modalText.innerHTML = text;
+        overlay.classList.add('active');
+
+        let newConfirm = btnConfirm.cloneNode(true);
+        let newCancel = btnCancel.cloneNode(true);
+        btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+
+        if (!showCancel) {
+            newCancel.style.display = 'none';
+        } else {
+            newCancel.style.display = 'block';
+            newCancel.addEventListener('click', closeModal);
+        }
+
+        newConfirm.addEventListener('click', onConfirm);
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').classList.remove('active');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        checkContinueAvailability();
+    });
+</script>
+
+</body>
+</html>
