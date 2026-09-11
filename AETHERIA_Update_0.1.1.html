@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aetheria — Update 0.1.1</title>
+<style>
+:root{
+  --bg:#070a12;--panel:#101625;--panel2:#151d2e;--line:#2a3855;
+  --text:#eaf0ff;--muted:#8f9db8;--gold:#f2cf70;--cyan:#70d9e8;
+  --green:#69d69a;--red:#ef7474;--purple:#ad91ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,"Segoe UI",sans-serif;user-select:none}
+body{height:100vh;background:radial-gradient(circle at 50% 0,#1a2340 0,#090d17 42%,#05070d 100%);color:var(--text);overflow:hidden}
+button,input{font:inherit}
+#game{height:100%;position:relative;overflow:hidden}
+#game:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(112,217,232,.035) 50%,transparent 65%);pointer-events:none}
+.screen{position:absolute;inset:0;display:none;z-index:2}
+.screen.active{display:flex}
+
+/* TITLE */
+#title{align-items:center;justify-content:center}
+.title-wrap{width:min(900px,92vw);text-align:center;position:relative}
+.emblem{width:92px;height:92px;margin:0 auto 22px;border:1px solid rgba(242,207,112,.55);border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#273557,#0c111e);box-shadow:0 0 50px rgba(242,207,112,.12)}
+.emblem span{font-size:38px;color:var(--gold);text-shadow:0 0 25px rgba(242,207,112,.65)}
+.logo{font-size:clamp(48px,8vw,82px);letter-spacing:13px;font-weight:800;text-shadow:0 0 30px rgba(112,217,232,.18)}
+.tag{color:var(--muted);letter-spacing:5px;margin-top:8px;font-size:13px}
+.version{display:inline-block;margin:20px 0 28px;padding:6px 12px;border:1px solid var(--line);border-radius:20px;color:var(--cyan);font-size:11px;letter-spacing:2px}
+.menu{width:min(420px,90vw);margin:auto;display:grid;gap:9px}
+.btn{border:1px solid var(--line);background:linear-gradient(180deg,#172137,#101827);color:var(--text);padding:14px 18px;border-radius:9px;cursor:pointer;transition:.18s;letter-spacing:1px}
+.btn:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px);box-shadow:0 8px 25px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.primary{border-color:rgba(242,207,112,.4)}
+.btn.danger:hover{border-color:var(--red)}
+.footer{margin-top:28px;color:#687692;font-size:11px}
+
+/* STORY / CREATION */
+.center{width:min(760px,92vw);margin:auto}
+.card{background:rgba(16,22,37,.94);border:1px solid var(--line);border-radius:16px;box-shadow:0 25px 70px rgba(0,0,0,.38);padding:30px}
+.story-title{color:var(--gold);font-size:12px;letter-spacing:3px;margin-bottom:20px}
+.story{min-height:300px;display:grid;align-content:center;text-align:center;white-space:pre-line;line-height:1.9;font-size:18px}
+.actions{display:flex;gap:10px}.actions>*{flex:1}
+input{width:100%;background:#090e19;color:var(--text);border:1px solid var(--line);padding:14px;border-radius:9px;outline:none;text-align:center}
+input:focus{border-color:var(--gold)}
+.error{height:22px;color:var(--red);font-size:12px;text-align:center}
+
+/* HUB */
+#hub{padding:18px}
+.hub{width:min(1180px,100%);height:100%;margin:auto;display:grid;grid-template-columns:300px 1fr;gap:14px}
+.panel{background:rgba(12,18,31,.92);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.panel-head{padding:15px 17px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#172239,#101827)}
+.panel-head small{display:block;color:var(--muted);font-size:10px;letter-spacing:2px;margin-bottom:4px}
+.panel-head strong{font-size:17px}
+.left{display:flex;flex-direction:column}
+.master{padding:17px;border-bottom:1px solid var(--line)}
+.master-name{font-size:23px;font-weight:750}.master-id{font-size:10px;color:var(--muted);margin-top:4px}
+.stat{display:flex;justify-content:space-between;margin-top:13px;font-size:12px;color:var(--muted)}.stat b{color:var(--text)}
+.fairy-mini{margin:15px;background:linear-gradient(145deg,#17233a,#101827);border:1px solid #344668;border-radius:12px;padding:14px}
+.fairy-mini .top{display:flex;justify-content:space-between;align-items:center}.fairy-dot{width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.fairy-mini p{font-size:12px;line-height:1.6;color:#c6d2e9;margin-top:9px}
+.nav{padding:12px;display:grid;gap:6px;overflow:auto}.nav .btn{text-align:left;padding:11px 13px;font-size:12px}
+.nav .btn.active{border-color:var(--gold);background:#1b263e}
+.main{display:grid;grid-template-rows:auto 1fr;min-width:0}
+.hub-top{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px;border-bottom:1px solid var(--line)}
+.metric{padding:12px;background:#0d1423;border:1px solid #202d46;border-radius:10px}.metric small{color:var(--muted);font-size:9px;letter-spacing:1.5px}.metric strong{display:block;margin-top:6px;font-size:18px}
+.content{padding:18px;overflow:auto}.content h2{font-size:20px;margin-bottom:5px}.sub{color:var(--muted);font-size:12px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.command{padding:17px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(145deg,#141d30,#0d1422);cursor:pointer}
+.command:hover{border-color:#657da8;transform:translateY(-1px)}
+.command .icon{font-size:22px;margin-bottom:9px}.command h3{font-size:14px}.command p{font-size:11px;color:var(--muted);line-height:1.55;margin-top:5px}
+.badge{float:right;font-size:9px;padding:4px 7px;border-radius:10px;border:1px solid #34435f;color:var(--cyan)}
+.badge.lock{color:var(--red)}
+
+/* MODAL / DETAIL */
+.modal{position:absolute;inset:0;background:rgba(2,5,10,.78);backdrop-filter:blur(7px);display:none;place-items:center;z-index:20;padding:18px}.modal.show{display:grid}
+.modal-box{width:min(820px,96vw);max-height:88vh;overflow:auto;background:#0e1626;border:1px solid #3b4e73;border-radius:16px;box-shadow:0 30px 100px #000;padding:22px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px;margin-bottom:15px}.modal-head h2{font-size:17px}.close{background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer}
+.info{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.info-item{background:#0a111e;border:1px solid #202d46;border-radius:10px;padding:12px}.info-item small{color:var(--muted);display:block;font-size:9px}.info-item b{display:block;margin-top:5px}
+.log{display:grid;gap:8px}.log-item{border-left:2px solid var(--cyan);background:#0a111e;padding:11px;font-size:11px;line-height:1.55}.log-item strong{color:var(--gold)}
+.filterbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}.chip{padding:7px 10px;border-radius:20px;border:1px solid var(--line);background:#0a111e;color:var(--muted);font-size:10px;cursor:pointer}.chip.on{color:var(--gold);border-color:var(--gold)}
+.hero{display:grid;grid-template-columns:45px 1fr auto;gap:10px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0a111e;margin-bottom:7px}.avatar{width:38px;height:38px;border-radius:9px;background:#202d49;display:grid;place-items:center;color:var(--gold);font-weight:700}.hero small{display:block;color:var(--muted);margin-top:3px}.status{font-size:10px;color:var(--green)}.status.busy{color:var(--red)}
+.conf{padding:12px;border-radius:10px;border:1px solid #354b6e;background:#111d31;margin-top:10px}.conf b{color:var(--gold)}.danger{color:var(--red)}.good{color:var(--green)}
+@media(max-width:850px){.hub{grid-template-columns:1fr}.left{display:none}.hub-top{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="game">
+
+<section id="title" class="screen active">
+  <div class="title-wrap">
+    <div class="emblem"><span>✦</span></div>
+    <div class="logo">AETHERIA</div>
+    <div class="tag">THE WORLD AFTER THE END</div>
+    <div class="version">SYSTEM UPDATE 0.1.1</div>
+    <div class="menu">
+      <button class="btn primary" id="newGame">NEW GAME</button>
+      <button class="btn" id="continue" disabled>CONTINUE</button>
+      <button class="btn" id="loadSave">LOAD / SAVE</button>
+      <button class="btn" id="settings">SETTINGS</button>
+      <button class="btn danger" id="exit">EXIT</button>
+    </div>
+    <div class="footer">GAME MASTER SYSTEM • AETHERIA CORE</div>
+  </div>
+</section>
+
+<section id="story" class="screen">
+ <div class="center card">
+   <div class="story-title">AETHERIA // PROLOGUE</div>
+   <div class="story" id="storyText"></div>
+   <div class="actions"><button class="btn" id="skip">SKIP</button><button class="btn primary" id="next">NEXT</button></div>
+ </div>
+</section>
+
+<section id="creation" class="screen">
+ <div class="center card">
+   <div class="story-title">GAME MASTER SYSTEM // INITIALIZATION</div>
+   <div class="story" style="min-height:210px"><div>
+     <h2 style="margin-bottom:12px">Choose your Master name</h2>
+     <p style="color:var(--muted);font-size:13px;line-height:1.7">The system has selected you.<br>Enter the name by which Aetheria will remember its Master.</p>
+   </div></div>
+   <input id="masterName" maxlength="20" placeholder="3–20 CHARACTERS">
+   <div class="error" id="error"></div>
+   <button class="btn primary" id="confirm">CONFIRM MASTER</button>
+ </div>
+</section>
+
+<section id="hub" class="screen">
+ <div class="hub">
+  <aside class="panel left">
+   <div class="panel-head"><small>GAME MASTER SYSTEM</small><strong>AETHERIA CORE</strong></div>
+   <div class="master">
+     <div class="master-name" id="mName">MASTER</div><div class="master-id" id="mId">MASTER-000000</div>
+     <div class="stat"><span>Rank</span><b id="mRank">F-Rank</b></div>
+     <div class="stat"><span>Tower</span><b id="mFloor">Floor 0 / 100</b></div>
+     <div class="stat"><span>Heroes</span><b id="mHeroes">0</b></div>
+     <div class="stat"><span>Gold</span><b id="mGold">1,000</b></div>
+     <div class="stat"><span>Gems</span><b id="mGems">100</b></div>
+   </div>
+   <div class="fairy-mini"><div class="top"><b>✦ FAIRY // AETHERIA</b><span class="fairy-dot"></span></div><p id="fairyMini">I'm online, Master. I'll keep watching the state of Aetheria.</p></div>
+   <nav class="nav">
+    <button class="btn active" data-open="overview">⌂ Main Menu</button>
+    <button class="btn" data-open="status">◈ Master Status</button>
+    <button class="btn" data-open="recruitment">✦ Recruitment Log</button>
+    <button class="btn" data-open="heroes">♙ Hero Roster</button>
+    <button class="btn" data-open="party">⚔ Party Management</button>
+    <button class="btn" data-open="inventory">▣ Inventory</button>
+    <button class="btn" data-open="town">⌂ Town Square</button>
+    <button class="btn" data-open="dungeon">◇ Dungeon</button>
+    <button class="btn" id="saveHub">▤ Load / Save</button>
+    <button class="btn danger" id="logout">LOGOUT</button>
+   </nav>
+  </aside>
+
+  <main class="panel main">
+   <div class="hub-top">
+    <div class="metric"><small>TOWER PROGRESS</small><strong id="topFloor">0 / 100</strong></div>
+    <div class="metric"><small>TOWN HAPPINESS</small><strong id="happiness">50%</strong></div>
+    <div class="metric"><small>TOWN FEAR</small><strong id="fear">0%</strong></div>
+    <div class="metric"><small>FAIRY MOOD</small><strong id="mood">CURIOUS</strong></div>
+   </div>
+   <div class="content" id="content"></div>
+  </main>
+ </div>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box"><div class="modal-head"><h2 id="modalTitle">System</h2><button class="close" onclick="closeModal()">×</button></div><div id="modalBody"></div></div></div>
+</div>
+
+<script>
+const KEY="aetheria_game_saves_v1";
+const story=[
+"THE WORLD HAS ALREADY ENDED.",
+"Aetheria was once a world of kingdoms, magic, and countless races.\nHumans. Elves. Dwarves. Beastfolk. Dragonkin. Demons. Merfolk.",
+"But everything changed.",
+"For thousands of years, Nythar, the Dark God, remained sealed away.\nThen the Cult of Eternal Night broke the seal.",
+"Reality collapsed. Cities fell. Kingdoms disappeared. Forests died.\nAETHERIA FELL.",
+"Then a tower appeared.\n\nTHE TOWER OF REBIRTH\n\n100 FLOORS.\n\nThe only known path toward Nythar.",
+"The Game Master System selected someone.\n\nYOU.\n\nTHE MASTER.",
+"You have no army. No kingdom. No legendary weapon.\nBut you have one final opportunity.\nClimb the Tower. Gather survivors. Discover the truth. Defeat Nythar.",
+"THE PACT\n\nReach Floor 100.\nDefeat Nythar.\nFulfill the pact.\n\nThen, perhaps, Aetheria can be reborn."
+];
+let storyIndex=0;
+let state={version:"0.1.1",currentScreen:"title",masterName:"",masterId:"",highestFloor:0,masterRank:"F-Rank",gold:1000,gems:100,tickets:3,specialTickets:0,heroes:[],parties:[[],[]],equipment:[],materials:[],town:{happiness:50,fear:0},fairy:{mood:"CURIOUS",personality:"CURIOUS",trust:10,knowledge:1,memory:[],mistakes:0},recruitmentLog:[],battleReports:[],explorationReports:[],skipDayReports:[],playTime:0,lastSaved:"",createdAt:""};
+let activeSlot=null;
+
+const $=id=>document.getElementById(id);
+const screens={title:$("title"),story:$("story"),creation:$("creation"),hub:$("hub")};
+function show(name){Object.values(screens).forEach(x=>x.classList.remove("active"));screens[name].classList.add("active");state.currentScreen=name; if(name==="hub")renderHub("overview")}
+function rank(f){return ["F-Rank","E-Rank","D-Rank","C-Rank","B-Rank","A-Rank","S-Rank","SS-Rank","SSS-Rank","EX-Rank","God-Rank"][Math.min(10,Math.floor(f/10))]}
+function saves(){let s=localStorage.getItem(KEY);if(!s){let x={};for(let i=1;i<=10;i++)x[i]=null;localStorage.setItem(KEY,JSON.stringify(x));return x}return JSON.parse(s)}
+function writeSaves(s){localStorage.setItem(KEY,JSON.stringify(s));$("continue").disabled=!Object.values(s).some(Boolean)}
+function save(slot){state.masterRank=rank(state.highestFloor);state.lastSaved=new Date().toLocaleDateString("id-ID");let s=saves();s[slot]=JSON.parse(JSON.stringify(state));writeSaves(s);activeSlot=slot}
+function freshHero(id,name,role,star,status="AVAILABLE"){return{id,name,role,star,status,level:1,hp:100,maxHp:100,element:"Neutral",skills:["Basic Skill"],equipment:[],condition:"Healthy"}}
+function fairySay(text){$("fairyMini").textContent=text}
+
+function renderHub(page){
+ $("mName").textContent=state.masterName||"MASTER";$("mId").textContent=state.masterId||"MASTER-000000";
+ $("mRank").textContent=rank(state.highestFloor);$("mFloor").textContent=`Floor ${state.highestFloor} / 100`;
+ $("mHeroes").textContent=state.heroes.length;$("mGold").textContent=state.gold.toLocaleString();$("mGems").textContent=state.gems.toLocaleString();
+ $("topFloor").textContent=`${state.highestFloor} / 100`;$("happiness").textContent=state.town.happiness+"%";$("fear").textContent=state.town.fear+"%";$("mood").textContent=state.fairy.mood;
+ document.querySelectorAll(".nav [data-open]").forEach(b=>b.classList.toggle("active",b.dataset.open===page));
+ const pages={
+ overview:`<h2>Main Menu</h2><div class="sub">Master command center — Update 0.1.1</div>
+ <div class="grid">
+  ${cmd("status","◈","Master Status","Rank, tower, economy, town condition and warnings.")}
+  ${cmd("recruitment","✦","Recruitment Log","Review recruitment history and let Fairy analyze trends.")}
+  ${cmd("heroes","♙","Hero Roster","Filter heroes by role, status and star.")}
+  ${cmd("party","⚔","Party Management","Build parties using AVAILABLE heroes only.")}
+  ${cmd("inventory","▣","Inventory","Equipment, materials and resource overview.")}
+  ${cmd("town","⌂","Town Square","Facilities, happiness, fear, recovery and Skip Day report.")}
+  ${cmd("dungeon","◇","Dungeon","Pre-battle analysis, risk assessment and battle reports.")}
+  ${cmd("fairy","✦","Fairy AI","Living companion memory, mood, trust and knowledge.")}
+ </div>
+ <div class="conf"><b>FAIRY ADVISORY</b><br>${fairyText()}<br><small>Confidence: HIGH</small></div>`,
+ status:`<h2>Master Status</h2><div class="sub">Current Game State is the source of truth.</div><div class="info">
+ ${item("Master Rank",rank(state.highestFloor))}${item("Tower Progress",`Floor ${state.highestFloor} / 100`)}
+ ${item("Gold",state.gold.toLocaleString())}${item("Gems",state.gems.toLocaleString())}${item("Tickets",state.tickets)}${item("Special Tickets",state.specialTickets)}
+ ${item("Hero Count",state.heroes.length)}${item("Town Happiness",state.town.happiness+"%")}${item("Town Fear",state.town.fear+"%")}${item("Fairy Trust",state.fairy.trust)}
+ </div><div class="conf"><b>FAIRY ANALYSIS</b><br>${fairyStatus()}</div>`,
+ recruitment:`<h2>Recruitment Log</h2><div class="sub">Type • Cost • Hero ID • Name • Race • Role • Star • New/Duplicate • Result</div>
+ <div class="log">${(state.recruitmentLog.length?state.recruitmentLog: [{type:"SYSTEM",cost:"—",heroId:"—",name:"No recruitment yet",race:"—",role:"—",star:"—",result:"WAITING"}]).slice().reverse().map(x=>`<div class="log-item"><strong>${x.type}</strong> · ${x.cost}<br>${x.heroId} — ${x.name} · ${x.race} · ${x.role} · ${x.star}<br>${x.newDuplicate||"NEW"} · ${x.result}</div>`).join("")}</div>
+ <div class="conf"><b>FAIRY RECRUITMENT ANALYSIS</b><br>${state.recruitmentLog.length?"I can compare star distribution, results, and duplicate trends as more recruitment data accumulates.":"No recruitment trend exists yet. I will begin learning from the first result."}</div>`,
+ heroes:heroPage(),
+ party:partyPage(),
+ inventory:`<h2>Inventory</h2><div class="sub">Equipment and materials available to the Master.</div><div class="info">${item("Equipment",state.equipment.length)}${item("Materials",state.materials.length)}${item("Gold",state.gold.toLocaleString())}${item("Medical","Ready")}</div>`,
+ town:`<h2>Town Square</h2><div class="sub">The town remembers what the Master does.</div><div class="info">${item("Happiness",state.town.happiness+"%")}${item("Fear",state.town.fear+"%")}${item("Facilities","Active")}${item("Training","Monitoring")}</div><button class="btn primary" style="margin-top:12px" onclick="skipDay()">SKIP DAY</button>
+ <div class="conf"><b>FAIRY TOWN REPORT</b><br>${state.town.happiness>=60?"The town feels hopeful.":"The town is fragile. Small decisions may affect morale."}</div>`,
+ dungeon:`<h2>Dungeon</h2><div class="sub">Before entering, Fairy evaluates the current state.</div><div class="info">${item("Enemy Strength","Unknown — scout required")}${item("Party Strength",partyStrength())}${item("Risk Level",state.heroes.length?"MEDIUM":"CRITICAL")}${item("Medical","Ready")}</div><button class="btn primary" style="margin-top:12px" onclick="preBattle()">RUN PRE-BATTLE ANALYSIS</button>
+ <div class="conf"><b>FAIRY RULE</b><br>If estimated victory is too low, Fairy will explicitly say <span class="danger">DO NOT ENTER</span>.</div>`,
+ fairy:`<h2>Fairy AI — Aetheria</h2><div class="sub">Living companion state.</div><div class="info">${item("Mood",state.fairy.mood)}${item("Personality",state.fairy.personality)}${item("Trust",state.fairy.trust)}${item("Knowledge",state.fairy.knowledge)}${item("Memories",state.fairy.memory.length)}${item("Mistakes Remembered",state.fairy.mistakes)}</div>
+ <div class="conf"><b>CURRENT THOUGHT</b><br>${fairyText()}<br><br><b>Core rule:</b> recommendations use only the current Game State and AVAILABLE heroes.</div>`
+ };
+ $("content").innerHTML=pages[page]||pages.overview;
+}
+function cmd(page,icon,title,desc){return `<div class="command" onclick="renderHub('${page}')"><div class="icon">${icon}<span class="badge">OPEN</span></div><h3>${title}</h3><p>${desc}</p></div>`}
+function item(a,b){return `<div class="info-item"><small>${a}</small><b>${b}</b></div>`}
+function fairyText(){if(!state.heroes.length)return "Master, we have no heroes yet. I won't recommend anyone until an AVAILABLE hero exists.";if(state.town.fear>70)return "Master, the town is afraid. I recommend stabilizing it before taking unnecessary risks.";return "The current state is stable. I will continue learning from your decisions."}
+function fairyStatus(){let w=[];if(state.gold<500)w.push("Gold is getting low.");if(state.town.fear>50)w.push("Town Fear is elevated.");if(!w.length)w.push("No critical warning detected.");return w.join(" ")}
+function partyStrength(){let av=state.heroes.filter(h=>h.status==="AVAILABLE");return av.length?Math.min(99,40+av.reduce((a,h)=>a+h.star*7+h.level,0))+"%":"0%"}
+function heroPage(){return `<h2>Hero Roster</h2><div class="sub">Combined filters can be used together. Example: Mage + Available + ★★★★+.</div>
+<div class="filterbar" id="filters"><span class="chip on" data-role="ALL">All Roles</span><span class="chip" data-role="Mage">Mage</span><span class="chip" data-role="Tank">Tank</span><span class="chip" data-role="Support">Support</span><span class="chip" data-role="DPS">DPS</span><span class="chip on" data-status="AVAILABLE">Available</span><span class="chip" data-status="BUSY">Busy</span><span class="chip" data-star="4">★★★★+</span></div>
+<div id="heroList">${heroRows()}</div>`}
+function heroRows(){let hs=state.heroes;return hs.length?hs.map(h=>`<div class="hero"><div class="avatar">★${h.star}</div><div><b>${h.name}</b><small>${h.id} · ${h.role} · Lv.${h.level} · ${h.element}</small></div><div class="status ${h.status!=="AVAILABLE"?"busy":""}">${h.status}</div></div>`).join(""):`<div class="conf">No heroes have been recruited. Fairy will never invent a Hero.</div>`}
+function partyPage(){let av=state.heroes.filter(h=>h.status==="AVAILABLE");let selected=av.slice(0,5);return `<h2>Party Management</h2><div class="sub">Fairy recommendation uses AVAILABLE heroes only.</div><div class="conf"><b>RECOMMENDED PARTY</b><br>${selected.length?selected.map((h,i)=>`${i+1}. ${h.name} — ${h.role}, ★${h.star} — selected for availability and current role balance.`).join("<br>"):"NO SAFE PARTY"}<br><br><b>Confidence:</b> ${selected.length>=3?"MEDIUM":"LOW"}</div><div style="margin-top:12px">${selected.map(h=>`<div class="hero"><div class="avatar">★${h.star}</div><div><b>${h.name}</b><small>${h.role} · ${h.condition}</small></div><div class="status">AVAILABLE</div></div>`).join("")}</div>`}
+function preBattle(){let av=state.heroes.filter(h=>h.status==="AVAILABLE");let victory=Math.min(95,35+av.length*10+av.reduce((a,h)=>a+h.star*3,0));let risk=victory<50?"CRITICAL":victory<70?"HIGH":victory<85?"MEDIUM":"LOW";let safe=victory>=60;openModal("Pre-Battle Recommendation",`<div class="info">${item("Victory Estimate",victory+"%")}${item("Survival Estimate",Math.max(10,victory-8)+"%")}${item("Risk Level",risk)}${item("Recommended Party",av.slice(0,5).map(h=>h.name).join(", ")||"None")}</div><div class="conf"><b>FAIRY DECISION</b><br>${safe?"I recommend entering only if the selected formation remains AVAILABLE and healthy.":"<span class='danger'>DO NOT ENTER.</span> The current probability is too low for a responsible recommendation."}<br><br><b>Confidence:</b> ${av.length>=3?"MEDIUM":"LOW"}</div>`)}
+function skipDay(){let recovered=state.heroes.filter(h=>h.status!=="AVAILABLE").length;state.heroes.forEach(h=>{h.status="AVAILABLE";h.condition="Healthy";h.hp=h.maxHp});state.town.happiness=Math.min(100,state.town.happiness+2);state.town.fear=Math.max(0,state.town.fear-1);state.skipDayReports.push({date:new Date().toISOString(),recovered,happiness:state.town.happiness,fear:state.town.fear});state.fairy.mood="PROUD";state.fairy.memory.push("Skip Day: heroes recovered and town condition changed.");fairySay("A new day has passed, Master. The heroes are recovering, and the town feels a little steadier.");renderHub("town");}
+function openModal(title,body){$("modalTitle").textContent=title;$("modalBody").innerHTML=body;$("modal").classList.add("show")}
+function closeModal(){$("modal").classList.remove("show")}
+function showSave(){let s=saves();openModal("Load / Save",`<div class="grid">${Object.keys(s).map(i=>`<button class="btn" onclick="${s[i]?`loadSlot(${i})`:`saveSlot(${i})`}">SLOT ${i}<br><small>${s[i]?`${s[i].masterName} · Floor ${s[i].highestFloor}`:"EMPTY"}</small></button>`).join("")}</div>`)}
+window.saveSlot=i=>{save(i);openModal("Saved",`Game saved to Slot ${i}.`);checkContinue()}
+window.loadSlot=i=>{let s=saves();if(!s[i])return;state=JSON.parse(JSON.stringify(s[i]));activeSlot=i;closeModal();show("hub")}
+function checkContinue(){$("continue").disabled=!Object.values(saves()).some(Boolean)}
+
+$("newGame").onclick=()=>{storyIndex=0;$("storyText").textContent=story[0];show("story")}
+$("next").onclick=()=>{storyIndex++;if(storyIndex>=story.length){show("creation")}else $("storyText").textContent=story[storyIndex]}
+$("skip").onclick=()=>{storyIndex=story.length-1;$("storyText").textContent=story[storyIndex]}
+$("confirm").onclick=()=>{let n=$("masterName").value.trim();if(n.length<3||n.length>20){$("error").textContent="Master name must be 3–20 characters.";return}$("error").textContent="";state={...state,masterName:n,masterId:"MASTER-"+Math.floor(100000+Math.random()*900000),createdAt:new Date().toISOString().slice(0,10),lastSaved:new Date().toISOString().slice(0,10)};save(1);activeSlot=1;fairySay("Master, I'm online. I will observe, remember, and warn you when your strategy is unsafe.");show("hub")}
+$("continue").onclick=()=>{let s=saves();let k=Object.keys(s).find(k=>s[k]);if(k)loadSlot(k)}
+$("loadSave").onclick=showSave;$("saveHub").onclick=showSave;
+$("settings").onclick=()=>openModal("Settings","Settings will be expanded in a later update. Core save data is preserved in this version.");
+$("exit").onclick=()=>openModal("Terminate Session","Are you sure you want to terminate this browser session?");
+$("logout").onclick=()=>showSave();
+document.querySelectorAll(".nav [data-open]").forEach(b=>b.onclick=()=>renderHub(b.dataset.open));
+document.addEventListener("click",e=>{if(e.target.matches(".chip")){document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));e.target.classList.add("on");}});
+checkContinue();
+</script>
+</body>
+</html>

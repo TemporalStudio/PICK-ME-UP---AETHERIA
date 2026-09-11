@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aetheria — Update 0.1.4</title>
+<style>
+:root{
+  --bg:#070a12;--panel:#101625;--panel2:#151d2e;--line:#2a3855;
+  --text:#eaf0ff;--muted:#8f9db8;--gold:#f2cf70;--cyan:#70d9e8;
+  --green:#69d69a;--red:#ef7474;--purple:#ad91ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,"Segoe UI",sans-serif;user-select:none}
+body{height:100vh;background:radial-gradient(circle at 50% 0,#1a2340 0,#090d17 42%,#05070d 100%);color:var(--text);overflow:hidden}
+button,input{font:inherit}
+#game{height:100%;position:relative;overflow:hidden}
+#game:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(112,217,232,.035) 50%,transparent 65%);pointer-events:none}
+.screen{position:absolute;inset:0;display:none;z-index:2}
+.screen.active{display:flex}
+
+/* TITLE */
+#title{align-items:center;justify-content:center}
+.title-wrap{width:min(900px,92vw);text-align:center;position:relative}
+.emblem{width:92px;height:92px;margin:0 auto 22px;border:1px solid rgba(242,207,112,.55);border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#273557,#0c111e);box-shadow:0 0 50px rgba(242,207,112,.12)}
+.emblem span{font-size:38px;color:var(--gold);text-shadow:0 0 25px rgba(242,207,112,.65)}
+.logo{font-size:clamp(48px,8vw,82px);letter-spacing:13px;font-weight:800;text-shadow:0 0 30px rgba(112,217,232,.18)}
+.tag{color:var(--muted);letter-spacing:5px;margin-top:8px;font-size:13px}
+.version{display:inline-block;margin:20px 0 28px;padding:6px 12px;border:1px solid var(--line);border-radius:20px;color:var(--cyan);font-size:11px;letter-spacing:2px}
+.menu{width:min(420px,90vw);margin:auto;display:grid;gap:9px}
+.btn{border:1px solid var(--line);background:linear-gradient(180deg,#172137,#101827);color:var(--text);padding:14px 18px;border-radius:9px;cursor:pointer;transition:.18s;letter-spacing:1px}
+.btn:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px);box-shadow:0 8px 25px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.primary{border-color:rgba(242,207,112,.4)}
+.btn.danger:hover{border-color:var(--red)}
+.footer{margin-top:28px;color:#687692;font-size:11px}
+
+/* STORY / CREATION */
+.center{width:min(760px,92vw);margin:auto}
+.card{background:rgba(16,22,37,.94);border:1px solid var(--line);border-radius:16px;box-shadow:0 25px 70px rgba(0,0,0,.38);padding:30px}
+.story-title{color:var(--gold);font-size:12px;letter-spacing:3px;margin-bottom:20px}
+.prologue-card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(18,25,43,.97),rgba(8,12,22,.97));border-color:rgba(242,207,112,.28);box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 80px rgba(242,207,112,.06)}
+.prologue-card:before{content:"";position:absolute;inset:10px;border:1px solid rgba(242,207,112,.08);border-radius:11px;pointer-events:none}
+.prologue-mark{text-align:center;color:var(--gold);font-size:22px;letter-spacing:8px;text-shadow:0 0 24px rgba(242,207,112,.5);margin-bottom:8px}
+.prologue-kicker{text-align:center;color:var(--cyan);font-size:9px;letter-spacing:4px;margin-bottom:7px}
+.prologue-title{text-align:center;font-size:30px;letter-spacing:9px;font-weight:700}
+.prologue-rule{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:14px auto 4px}
+.prologue-note{text-align:center;color:#687692;font-size:9px;letter-spacing:3px;margin-top:8px}
+.rank-up{border:1px solid rgba(242,207,112,.35);background:linear-gradient(145deg,#1d2942,#111827);padding:14px;border-radius:12px;margin-top:12px}
+.rank-table{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.rank-row{padding:9px 10px;background:#0a111e;border:1px solid #202d46;border-radius:8px;font-size:10px;display:flex;justify-content:space-between}.rank-row b{color:var(--gold)}
+.story{min-height:300px;display:grid;align-content:center;text-align:center;white-space:pre-line;line-height:1.9;font-size:18px}
+.actions{display:flex;gap:10px}.actions>*{flex:1}
+input{width:100%;background:#090e19;color:var(--text);border:1px solid var(--line);padding:14px;border-radius:9px;outline:none;text-align:center}
+input:focus{border-color:var(--gold)}
+.error{height:22px;color:var(--red);font-size:12px;text-align:center}
+
+/* HUB */
+#hub{padding:18px}
+.hub{width:min(1180px,100%);height:100%;margin:auto;display:grid;grid-template-columns:300px 1fr;gap:14px}
+.panel{background:rgba(12,18,31,.92);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.panel-head{padding:15px 17px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#172239,#101827)}
+.panel-head small{display:block;color:var(--muted);font-size:10px;letter-spacing:2px;margin-bottom:4px}
+.panel-head strong{font-size:17px}
+.left{display:flex;flex-direction:column}
+.master{padding:17px;border-bottom:1px solid var(--line)}
+.master-name{font-size:23px;font-weight:750}.master-id{font-size:10px;color:var(--muted);margin-top:4px}
+.stat{display:flex;justify-content:space-between;margin-top:13px;font-size:12px;color:var(--muted)}.stat b{color:var(--text)}
+.fairy-mini{margin:15px;background:linear-gradient(145deg,#17233a,#101827);border:1px solid #344668;border-radius:12px;padding:14px}
+.fairy-mini .top{display:flex;justify-content:space-between;align-items:center}.fairy-dot{width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.fairy-mini p{font-size:12px;line-height:1.6;color:#c6d2e9;margin-top:9px}
+.nav{padding:12px;display:grid;gap:6px;overflow:auto}.nav .btn{text-align:left;padding:11px 13px;font-size:12px}
+.nav .btn.active{border-color:var(--gold);background:#1b263e}
+.main{display:grid;grid-template-rows:auto 1fr;min-width:0}
+.hub-top{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px;border-bottom:1px solid var(--line)}
+.metric{padding:12px;background:#0d1423;border:1px solid #202d46;border-radius:10px}.metric small{color:var(--muted);font-size:9px;letter-spacing:1.5px}.metric strong{display:block;margin-top:6px;font-size:18px}
+.content{padding:18px;overflow:auto}.content h2{font-size:20px;margin-bottom:5px}.sub{color:var(--muted);font-size:12px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.notice{padding:12px;border:1px solid rgba(112,217,232,.22);background:#0d1727;border-radius:10px;color:#c6d2e9;font-size:11px;line-height:1.55;margin-bottom:11px}.notice b{color:var(--cyan)}
+.status-hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-bottom:11px}.status-banner{padding:15px;border:1px solid #2d3d5b;border-radius:12px;background:linear-gradient(145deg,#172239,#0d1422)}.status-banner small{display:block;color:var(--muted);font-size:9px;letter-spacing:1.5px}.status-banner strong{display:block;font-size:25px;color:var(--gold);margin:4px 0}.status-banner small:last-child{color:#c6d2e9;letter-spacing:.5px}
+.command{padding:17px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(145deg,#141d30,#0d1422);cursor:pointer}
+.command:hover{border-color:#657da8;transform:translateY(-1px)}
+.command .icon{font-size:22px;margin-bottom:9px}.command h3{font-size:14px}.command p{font-size:11px;color:var(--muted);line-height:1.55;margin-top:5px}
+.badge{float:right;font-size:9px;padding:4px 7px;border-radius:10px;border:1px solid #34435f;color:var(--cyan)}
+.badge.lock{color:var(--red)}
+
+/* DATABASE CARDS */
+.db-section{margin-bottom:20px}
+.db-section h3{color:var(--gold);font-size:15px;margin-bottom:10px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.db-card{background:#0a111e;border:1px solid #202d46;border-radius:10px;padding:12px;font-size:11px}
+.db-card b{color:var(--cyan);display:block;margin-bottom:4px;font-size:12px}
+.db-card p{color:var(--muted);line-height:1.4}
+
+/* MODAL / DETAIL */
+.modal{position:absolute;inset:0;background:rgba(2,5,10,.78);backdrop-filter:blur(7px);display:none;place-items:center;z-index:20;padding:18px}.modal.show{display:grid}
+.modal-box{width:min(820px,96vh);max-height:88vh;overflow:auto;background:#0e1626;border:1px solid #3b4e73;border-radius:16px;box-shadow:0 30px 100px #000;padding:22px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px;margin-bottom:15px}.modal-head h2{font-size:17px}.close{background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer}
+.info{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.info-item{background:#0a111e;border:1px solid #202d46;border-radius:10px;padding:12px}.info-item small{color:var(--muted);display:block;font-size:9px}.info-item b{display:block;margin-top:5px}
+.log{display:grid;gap:8px}.log-item{border-left:2px solid var(--cyan);background:#0a111e;padding:11px;font-size:11px;line-height:1.55}.log-item strong{color:var(--gold)}
+.filterbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}.chip{padding:7px 10px;border-radius:20px;border:1px solid var(--line);background:#0a111e;color:var(--muted);font-size:10px;cursor:pointer}.chip.on{color:var(--gold);border-color:var(--gold)}
+.hero{display:grid;grid-template-columns:45px 1fr auto;gap:10px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0a111e;margin-bottom:7px}.avatar{width:38px;height:38px;border-radius:9px;background:#202d49;display:grid;place-items:center;color:var(--gold);font-weight:700}.hero small{display:block;color:var(--muted);margin-top:3px}.status{font-size:10px;color:var(--green)}.status.busy{color:var(--red)}
+.conf{padding:12px;border-radius:10px;border:1px solid #354b6e;background:#111d31;margin-top:10px}.conf b{color:var(--gold)}.danger{color:var(--red)}.good{color:var(--green)}
+@media(max-width:850px){.hub{grid-template-columns:1fr}.left{display:none}.hub-top{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="game">
+
+<section id="title" class="screen active">
+  <div class="title-wrap">
+    <div class="emblem"><span>✦</span></div>
+    <div class="logo">AETHERIA</div>
+    <div class="tag">THE WORLD AFTER THE END</div>
+    <div class="version">SYSTEM UPDATE 0.1.4</div>
+    <div class="menu">
+      <button class="btn primary" id="newGame">NEW GAME</button>
+      <button class="btn" id="continue" disabled>CONTINUE</button>
+      <button class="btn" id="loadSave">LOAD / SAVE</button>
+      <button class="btn" id="settings">SETTINGS</button>
+      <button class="btn danger" id="exit">EXIT</button>
+    </div>
+    <div class="footer">GAME MASTER SYSTEM • AETHERIA CORE</div>
+  </div>
+</section>
+
+<section id="story" class="screen">
+ <div class="center card prologue-card">
+   <div class="prologue-mark">✦</div>
+   <div class="prologue-kicker">AETHERIA • ORIGIN RECORD</div>
+   <div class="prologue-title">PROLOGUE</div>
+   <div class="prologue-rule"></div>
+   <div class="story" id="storyText"></div>
+   <div class="prologue-note">THE RECORD IS INCOMPLETE</div>
+   <div class="actions" style="margin-top:18px"><button class="btn" id="skip">SKIP</button><button class="btn primary" id="next">NEXT</button></div>
+ </div>
+</section>
+
+<section id="creation" class="screen">
+ <div class="center card">
+   <div class="story-title">GAME MASTER SYSTEM // INITIALIZATION</div>
+   <div class="story" style="min-height:210px"><div>
+     <h2 style="margin-bottom:12px">Choose your Master name</h2>
+     <p style="color:var(--muted);font-size:13px;line-height:1.7">The system has selected you.<br>Enter the name by which Aetheria will remember its Master.</p>
+   </div></div>
+   <input id="masterName" maxlength="20" placeholder="3–20 CHARACTERS">
+   <div class="error" id="error"></div>
+   <button class="btn primary" id="confirm">CONFIRM MASTER</button>
+ </div>
+</section>
+
+<section id="hub" class="screen">
+ <div class="hub">
+  <aside class="panel left">
+   <div class="panel-head"><small>GAME MASTER SYSTEM</small><strong>AETHERIA CORE</strong></div>
+   <div class="master">
+     <div class="master-name" id="mName">MASTER</div><div class="master-id" id="mId">MASTER-000000</div>
+     <div class="stat"><span>Rank</span><b id="mRank">F-Rank</b></div>
+     <div class="stat"><span>Tower</span><b id="mFloor">Floor 0 / 100</b></div>
+     <div class="stat"><span>Heroes</span><b id="mHeroes">0</b></div>
+     <div class="stat"><span>Gold</span><b id="mGold">1,000</b></div>
+     <div class="stat"><span>Gems</span><b id="mGems">100</b></div>
+   </div>
+   <div class="fairy-mini"><div class="top"><b>✦ FAIRY // AETHERIA</b><span class="fairy-dot"></span></div><p id="fairyMini">I'm online, Master. I'll keep watching the state of Aetheria.</p></div>
+   <nav class="nav">
+    <button class="btn active" data-open="overview">⌂ Main Menu</button>
+    <button class="btn" data-open="status">◈ Master Status</button>
+    <button class="btn" data-open="database">📖 Data Base</button>
+    <button class="btn" data-open="recruitment">✦ Recruitment Log</button>
+    <button class="btn" data-open="heroes">♙ Hero Roster</button>
+    <button class="btn" data-open="party">⚔ Party Management</button>
+    <button class="btn" data-open="inventory">▣ Inventory</button>
+    <button class="btn" data-open="town">⌂ Town Square</button>
+    <button class="btn" data-open="dungeon">◇ Dungeon</button>
+    <button class="btn" id="saveHub">▤ Continue / Save</button>
+    <button class="btn danger" id="logout">LOGOUT</button>
+   </nav>
+  </aside>
+
+  <main class="panel main">
+   <div class="hub-top">
+    <div class="metric"><small>TOWER PROGRESS</small><strong id="topFloor">0 / 100</strong></div>
+    <div class="metric"><small>TOWN HAPPINESS</small><strong id="happiness">50%</strong></div>
+    <div class="metric"><small>TOWN FEAR</small><strong id="fear">0%</strong></div>
+    <div class="metric"><small>FAIRY MOOD</small><strong id="mood">CURIOUS</strong></div>
+   </div>
+   <div class="content" id="content"></div>
+  </main>
+ </div>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box"><div class="modal-head"><h2 id="modalTitle">System</h2><button class="close" onclick="closeModal()">×</button></div><div id="modalBody"></div></div></div>
+</div>
+
+<script>
+const KEY="aetheria_game_saves_v1";
+const story=[
+"THE WORLD HAS ALREADY ENDED.",
+"Aetheria was once a world of kingdoms, magic, and countless races.\nHumans. Elves. Dwarves. Beastfolk. Dragonkin. Demons. Merfolk.",
+"But everything changed.",
+"For thousands of years, Nythar, the Dark God, remained sealed away.\nThen the Cult of Eternal Night broke the seal.",
+"Reality collapsed. Cities fell. Kingdoms disappeared. Forests died.\nAETHERIA FELL.",
+"Then a tower appeared.\n\nTHE TOWER OF REBIRTH\n\n100 FLOORS.\n\nThe only known path toward Nythar.",
+"The Game Master System selected someone.\n\nYOU.\n\nTHE MASTER.",
+"You have no army. No kingdom. No legendary weapon.\nBut you have one final opportunity.\nClimb the Tower. Gather survivors. Discover the truth. Defeat Nythar.",
+"THE PACT\n\nReach Floor 100.\nDefeat Nythar.\nFulfill the pact.\n\nThen, perhaps, Aetheria can be reborn."
+];
+let storyIndex=0;
+let state={version:"0.1.4",currentScreen:"title",masterName:"",masterId:"",highestFloor:0,currentFloor:0,day:1,masterRank:"F",masterTitle:"New Master",gold:1000,gems:100,tickets:3,specialTickets:0,heroes:[],parties:[[],[]],equipment:[],materials:[],town:{happiness:50,fear:0,facilities:{Inn:{rank:"E",level:0},Blacksmith:{rank:"D",level:0},"Tower Magic":{rank:"B",level:0},"Training Ground":{rank:"A",level:0},Dormitory:{rank:"E",level:0},"Fairy System":{rank:"F",level:1}}},fairy:{mood:"CURIOUS",personality:"CURIOUS",trust:10,knowledge:1,memory:[],mistakes:0},recruitmentLog:[],battleReports:[],explorationReports:[],skipDayReports:[],playTime:0,lastSaved:"",createdAt:""};
+let activeSlot=null;
+
+const $=id=>document.getElementById(id);
+const screens={title:$("title"),story:$("story"),creation:$("creation"),hub:$("hub")};
+function show(name){Object.values(screens).forEach(x=>x.classList.remove("active"));screens[name].classList.add("active");state.currentScreen=name; if(name==="hub")renderHub("overview")}
+const MASTER_RANKS=[
+ {rank:"F",title:"New Master",min:1},{rank:"E",title:"Tower Initiate",min:10},{rank:"D",title:"Tower Adventurer",min:20},{rank:"C",title:"Tower Commander",min:30},{rank:"B",title:"Tower Strategist",min:40},{rank:"A",title:"Tower Lord",min:50},{rank:"S",title:"Grand Master",min:60},{rank:"SS",title:"Legendary Master",min:70},{rank:"SSS",title:"Mythic Master",min:80},{rank:"EX",title:"Transcendent Master",min:90},{rank:"MASTER",title:"Master of Aetheria",min:100}
+];
+function rankData(f){let d=MASTER_RANKS[0];for(const x of MASTER_RANKS)if(f>=x.min)d=x;return d}
+function rank(f){return rankData(f).rank}
+function title(f){return rankData(f).title}
+function heroCounts(){return {total:state.heroes.length,available:state.heroes.filter(h=>h.status==="AVAILABLE").length,inParty:state.heroes.filter(h=>h.status==="IN_PARTY"||h.status==="BUSY").length,injured:state.heroes.filter(h=>h.status==="INJURED").length,dead:state.heroes.filter(h=>h.status==="DEAD").length}}
+function syncMaster(){
+ const d=rankData(state.highestFloor);state.masterRank=d.rank;state.masterTitle=d.title;
+ if(state.currentFloor==null)state.currentFloor=state.highestFloor;if(state.day==null)state.day=1;
+ if(!state.town.facilities)state.town.facilities={};
+ const defaults={Inn:"E",Blacksmith:"D","Tower Magic":"B","Training Ground":"A",Dormitory:"E","Fairy System":"F"};
+ for(const f of Object.keys(defaults)){if(!state.town.facilities[f])state.town.facilities[f]={rank:defaults[f],level:0}}
+ const rankIndex=MASTER_RANKS.findIndex(x=>x.rank===state.masterRank);
+ for(const [f,obj] of Object.entries(state.town.facilities)){const unlock=MASTER_RANKS.findIndex(x=>x.rank===obj.rank);obj.level=Math.max(0,rankIndex-unlock+1)}
+ if(state.masterRank==="F"&&state.highestFloor===0){state.town.facilities["Fairy System"].level=1}
+}
+function clearTowerFloor(floor){
+ const previous=state.highestFloor;state.currentFloor=Math.max(0,Math.min(100,floor));
+ if(floor>state.highestFloor){state.highestFloor=Math.min(100,floor);const before=rankData(previous).rank;syncMaster();if(rankData(state.highestFloor).rank!==before){state.fairy.knowledge+=1;state.fairy.memory.push(`Master Rank increased to ${state.masterRank} — ${state.masterTitle}.`);openModal("RANK UP",`<div class="rank-up"><b>MASTER RANK INCREASED</b><br><strong style="font-size:24px;color:var(--gold)">${state.masterRank}</strong><br>${state.masterTitle}<br><br>Highest Tower Floor: ${state.highestFloor}<br>Town Square facilities have been synchronized.<br>Fairy knowledge has been updated.</div>`)}}else syncMaster();save(activeSlot||1)
+}
+function saves(){let s=localStorage.getItem(KEY);if(!s){let x={};for(let i=1;i<=10;i++)x[i]=null;localStorage.setItem(KEY,JSON.stringify(x));return x}return JSON.parse(s)}
+function writeSaves(s){localStorage.setItem(KEY,JSON.stringify(s));$("continue").disabled=!Object.values(s).some(Boolean)}
+function save(slot){syncMaster();state.lastSaved=new Date().toLocaleDateString("id-ID");let s=saves();s[slot]=JSON.parse(JSON.stringify(state));writeSaves(s);activeSlot=slot}
+function fairySay(text){$("fairyMini").textContent=text}
+
+/* DATA BASE ARRAYS */
+const dbBasicSkills = [
+  {id:"BS-NOR-001", name:"Slash", target:"1 Musuh", desc:"Menyerang dengan tebasan standar, menghasilkan 100% Physical ATK sebagai damage. Memulihkan 5 SP."},
+  {id:"BS-NOR-002", name:"Quick Jab", target:"1 Musuh", desc:"Serangan cepat dengan priority tinggi, menghasilkan 80% Physical ATK."},
+  {id:"BS-NOR-003", name:"Heavy Smash", target:"1 Musuh", desc:"Pukulan berat berdaya rusak tinggi, menghasilkan 130% Physical ATK, namun mengurangi Speed pengguna sebesar 10% selama 1 giliran."},
+  {id:"BS-NOR-004", name:"Double Strike", target:"1 Musuh", desc:"Melancarkan dua serangan beruntun, masing-masing menghasilkan 60% Physical ATK."},
+  {id:"BS-NOR-005", name:"Guard Break", target:"1 Musuh", desc:"Menghasilkan 90% Physical ATK dan mengurangi Defense target sebesar 15% selama 2 giliran."},
+  {id:"BS-NOR-006", name:"Point Blank", target:"1 Musuh", desc:"Tembakan jarak dekat yang mengabaikan 10% Defense target, menghasilkan 110% Physical ATK."},
+  {id:"BS-NOR-007", name:"Sweep Kick", target:"Semua Musuh", desc:"Menyerang seluruh musuh dengan sapuan kaki, menghasilkan 50% Physical ATK per target."},
+  {id:"BS-NOR-008", name:"Piercing Thrust", target:"1 Musuh", desc:"Tusukan presisi tinggi yang memiliki peluang 30% untuk menghasilkan Critical Hit, menghasilkan 100% Physical ATK."},
+  {id:"BS-NOR-009", name:"Rush Attack", target:"1 Musuh", desc:"Menerjang ke depan, menghasilkan 110% Physical ATK dan memberikan efek Taunt pada diri sendiri selama 1 giliran."},
+  {id:"BS-NOR-010", name:"Vigor Strike", target:"1 Musuh", desc:"Menghasilkan 100% Physical ATK dan memulihkan HP pengguna sebesar 20% dari damage yang diberikan."},
+  {id:"BS-FIR-011", name:"Ember", target:"1 Musuh", desc:"Meluncurkan percikan api kecil, menghasilkan 90% Magic ATK elemen Api dengan peluang 35% menimbulkan efek Burn (3 giliran)."},
+  {id:"BS-FIR-012", name:"Flame Claw", target:"1 Musuh", desc:"Cakar yang diselimuti api, menghasilkan 110% Physical ATK elemen Api dan memberikan efek Burn (2 giliran)."},
+  {id:"BS-FIR-013", name:"Spark Shot", target:"1 Musuh", desc:"Menembakkan proyektil api cepat, menghasilkan 100% Magic ATK. Meningkatkan ATK pengguna sebesar 10% selama 1 giliran jika target terkena Burn."},
+  {id:"BS-FIR-014", name:"Heat Wave", target:"Semua Musuh", desc:"Menghembuskan hawa panas membara, menghasilkan 55% Magic ATK elemen Api ke semua musuh."},
+  {id:"BS-FIR-015", name:"Magma Punch", target:"1 Musuh", desc:"Tinju berbalut magma, menghasilkan 120% Physical ATK dengan peluang 20% mengurangi Defense target."},
+  {id:"BS-WAT-016", name:"Water Splash", target:"1 Musuh", desc:"Menyemprotkan air bertekanan, menghasilkan 90% Magic ATK elemen Air dengan peluang 30% mengurangi Speed target selama 2 giliran."},
+  {id:"BS-WAT-017", name:"Aqua Blade", target:"1 Musuh", desc:"Bilah air tajam, menghasilkan 110% Physical/Magic ATK (mengambil nilai tertinggi)."},
+  {id:"BS-WAT-018", name:"Chill Dart", target:"1 Musuh", desc:"Es kecil berkecepatan tinggi, menghasilkan 95% Magic ATK dengan peluang 25% menimbulkan efek Freeze (1 giliran)."},
+  {id:"BS-WAT-019", name:"Healing Droplet", target:"1 Sekutu", desc:"Memulihkan HP sekutu sebesar 15% dari Max HP target menggunakan energi air murni."},
+  {id:"BS-WAT-020", name:"Tidal Tap", target:"Semua Musuh", desc:"Gelombang air kecil, menghasilkan 50% Magic ATK dan memberikan efek Wet pada semua musuh selama 1 giliran."},
+  {id:"BS-WND-021", name:"Wind Cutter", target:"1 Musuh", desc:"Tebasan angin tajam, menghasilkan 100% Magic ATK elemen Udara dengan akurasi tinggi."},
+  {id:"BS-WND-022", name:"Gale Dash", target:"1 Musuh", desc:"Menyerang dengan kecepatan angin, menghasilkan 90% Physical ATK dan meningkatkan Speed pengguna sebesar 10% selama 1 giliran."},
+  {id:"BS-WND-023", name:"Gust", target:"Semua Musuh", desc:"Hembusan angin kencang, menghasilkan 50% Magic ATK dengan peluang 15% mengganggu aksi target (Interrupt)."},
+  {id:"BS-WND-024", name:"Feather Dart", target:"1 Musuh", desc:"Lemparan bulu berangin, menghasilkan 105% Physical ATK dan mengabaikan 5% Evasion target."},
+  {id:"BS-WND-025", name:"Zephyr Touch", target:"1 Sekutu", desc:"Memberikan buff Evasion sebesar +10% kepada 1 sekutu selama 2 giliran."},
+  {id:"BS-EAR-026", name:"Stone Pebble", target:"1 Musuh", desc:"Melempar batu keras, menghasilkan 95% Physical ATK elemen Tanah."},
+  {id:"BS-EAR-027", name:"Mud Slap", target:"1 Musuh", desc:"Lemparan lumpur, menghasilkan 80% Physical ATK dan mengurangi akurasi target sebesar 10% selama 2 giliran."},
+  {id:"BS-EAR-028", name:"Hardening", target:"Diri Sendiri", desc:"Memperkeras kulit/armor dengan elemen tanah, meningkatkan Defense pengguna sebesar 20% selama 2 giliran."},
+  {id:"BS-EAR-029", name:"Ground Spike", target:"1 Musuh", desc:"Memunculkan duri tanah dari bawah kaki musuh, menghasilkan 110% Physical ATK."},
+  {id:"BS-EAR-030", name:"Tremor", target:"Semua Musuh", desc:"Menghentak tanah, menghasilkan 45% Physical ATK ke semua musuh dengan peluang kecil memperlambat Speed."},
+  {id:"BS-LGT-031", name:"Flash", target:"1 Musuh", desc:"Kilatan cahaya menyilaukan, menghasilkan 85% Magic ATK elemen Cahaya dan mengurangi akurasi target sebesar 15% selama 1 giliran."},
+  {id:"BS-LGT-032", name:"Holy Ray", target:"1 Musuh", desc:"Menembakkan sinar suci tipis, menghasilkan 100% Magic ATK. Memberikan bonus damage 25% jika target ber-elemen Kegelapan."},
+  {id:"BS-LGT-033", name:"Luminescent Touch", target:"1 Sekutu", desc:"Menyembuhkan 12% Max HP sekutu dan menghapus 1 debuff ringan."},
+  {id:"BS-LGT-034", name:"Sun Spark", target:"1 Musuh", desc:"Pukulan berenergi cahaya, menghasilkan 105% Physical ATK."},
+  {id:"BS-LGT-035", name:"Blessing Glow", target:"Semua Sekutu", desc:"Memberikan pemulihan HP kecil secara bertahap (Regen) sebesar 5% per giliran selama 2 giliran kepada seluruh tim."},
+  {id:"BS-DRK-036", name:"Shadow Strike", target:"1 Musuh", desc:"Serangan dari bayangan, menghasilkan 100% Physical ATK elemen Kegelapan."},
+  {id:"BS-DRK-037", name:"Dark Needle", target:"1 Musuh", desc:"Jarum energi gelap, menghasilkan 90% Magic ATK dengan peluang 30% menimbulkan efek Poison atau Blind."},
+  {id:"BS-DRK-038", name:"Life Drain", target:"1 Musuh", desc:"Menyerap esensi kegelapan target, menghasilkan 85% Magic ATK dan memulihkan HP pengguna sebesar 50% dari damage yang diberikan."},
+  {id:"BS-DRK-039", name:"Gloom", target:"1 Musuh", desc:"Mengirimkan aura suram, mengurangi Magic ATK target sebesar 15% selama 2 giliran."},
+  {id:"BS-DRK-040", name:"Night Shade", target:"Semua Musuh", desc:"Menyebarkan kabut gelap, menghasilkan 45% Magic ATK ke semua musuh dengan peluang 20% menimbulkan efek Silence."},
+  {id:"BS-COM-041", name:"Plasma Spark (Listrik/Cahaya)", target:"1 Musuh", desc:"Menghasilkan 105% Magic ATK dengan peluang 40% membuat target terkena efek Paralysis."},
+  {id:"BS-COM-042", name:"Venom Bite (Normal/Kegelapan)", target:"1 Musuh", desc:"Gigitan beracun, menghasilkan 90% Physical ATK dan memberikan efek Poison (3 giliran)."},
+  {id:"BS-COM-043", name:"Steam Blast (Api/Air)", target:"1 Musuh", desc:"Semburan uap panas, menghasilkan 110% Magic ATK yang mengabaikan 15% Resistance target."},
+  {id:"BS-COM-044", name:"Quicksand Stab (Tanah/Air)", target:"1 Musuh", desc:"Menghasilkan 100% Physical ATK dan menurunkan Speed target sebesar 20% selama 2 giliran."},
+  {id:"BS-COM-045", name:"Frostbite Claw (Air/Udara)", target:"1 Musuh", desc:"Cakar es dingin, menghasilkan 105% Physical ATK dengan peluang 30% membekukan bagian tubuh target."},
+  {id:"BS-COM-046", name:"Meteor Fragment (Api/Tanah)", target:"1 Musuh", desc:"Pecahan meteor kecil, menghasilkan 125% Physical ATK (memiliki cooldown 1 giliran)."},
+  {id:"BS-COM-047", name:"Eclipse Slash (Cahaya/Kegelapan)", target:"1 Musuh", desc:"Tebasan dua sisi cahaya dan kegelapan, menghasilkan 115% Adaptive Damage."},
+  {id:"BS-COM-048", name:"Sonic Boom (Udara/Normal)", target:"1 Musuh", desc:"Gelombang suara berkecepatan tinggi, menghasilkan 100% Magic ATK dan menembus skill pelindung/shield target."},
+  {id:"BS-COM-049", name:"Magma Shield (Api/Tanah)", target:"Diri Sendiri", desc:"Melapisi diri dengan magma, meningkatkan Defense sebesar 15% dan memberikan efek Retaliation selama 2 giliran."},
+  {id:"BS-COM-050", name:"Astral Ray (Cahaya/Udara)", target:"1 Musuh", desc:"Sinar astral murni, menghasilkan 110% Magic ATK dengan tingkat Critical Rate dasar +15%."}
+];
+
+const dbUltimateSkills = [
+  {id:"ULT-NOR-001", name:"Godspeed Blade", cost:"100% UG", target:"1 Musuh", desc:"Serangan tebasan pamungkas berkecepatan mutlak, menghasilkan 350% Physical ATK dan mengabaikan seluruh Defense target."},
+  {id:"ULT-NOR-002", name:"Final Impact", cost:"100% UG", target:"Semua Musuh", desc:"Pukulan masif ke tanah yang meretakkan arena, menghasilkan 220% Physical ATK ke seluruh musuh dan men-stun target selama 1 giliran."},
+  {id:"ULT-NOR-003", name:"Limit Breaker Barrage", cost:"100% UG", target:"1 Musuh", desc:"Hujan kombo serangan tanpa henti sebanyak 8-10 hit, menghasilkan total 380% Physical ATK."},
+  {id:"ULT-NOR-004", name:"Vanguard Fortress", cost:"100% UG", target:"Semua Sekutu", desc:"Menciptakan perisai pelindung absolut, memberikan Shield setara 50% Max HP seluruh tim dan meningkatkan Defense 40% selama 2 giliran."},
+  {id:"ULT-FIR-005", name:"Supernova Eruption", cost:"100% UG", target:"Semua Musuh", desc:"Memanggil bola api raksasa menyerupai meteorit, menghasilkan 280% Magic ATK elemen Api dan jaminan Burn parah (3 giliran)."},
+  {id:"ULT-FIR-006", name:"Hellfire Annihilation", cost:"100% UG", target:"1 Musuh", desc:"Membakar target dalam kobaran api neraka murni, menghasilkan 400% Magic ATK. Damage meningkat 50% jika target sudah Burn."},
+  {id:"ULT-FIR-007", name:"Phoenix Rebirth Flame", cost:"100% UG", target:"Diri Sendiri / Tim", desc:"Memulihkan 60% Max HP pengguna dan memberikan status Revive otomatis (1 kali bangkit dengan 30% HP)."},
+  {id:"ULT-WAT-008", name:"Tsunami Wrath", cost:"100% UG", target:"Semua Musuh", desc:"Memanggil gelombang pasang raksasa, menghasilkan 260% Magic ATK elemen Air dan menurunkan Speed seluruh musuh 30% selama 2 giliran."},
+  {id:"ULT-WAT-009", name:"Absolute Zero Prison", cost:"100% UG", target:"1 Musuh", desc:"Membekukan target secara total dalam es abadi, menghasilkan 340% Magic ATK dan melumpuhkan (Freeze) selama 2 giliran penuh."},
+  {id:"ULT-WAT-010", name:"Ocean's Blessing", cost:"100% UG", target:"Semua Sekutu", desc:"Memulihkan 70% Max HP seluruh anggota tim dan membersihkan semua debuff yang sedang aktif."},
+  {id:"ULT-WND-011", name:"Tempest Typhoon", cost:"100% UG", target:"Semua Musuh", desc:"Badai topan besar, menghasilkan 270% Magic ATK elemen Udara dan mereset cooldown skill seluruh rekan satu tim."},
+  {id:"ULT-WND-012", name:"Divine Gale Strike", cost:"100% UG", target:"1 Musuh", desc:"Tebasan angin berkecepatan cahaya, menghasilkan 370% Physical ATK dan buff Evasion 50% pada pengguna selama 1 giliran."},
+  {id:"ULT-WND-013", name:"Sky Dancer's Domain", cost:"100% UG", target:"Semua Sekutu", desc:"Meningkatkan Speed dan Critical Rate seluruh tim sebesar 30% selama 3 giliran."},
+  {id:"ULT-EAR-014", name:"Gaia Cataclysm", cost:"100% UG", target:"Semua Musuh", desc:"Gempa bumi kolosal, menghasilkan 290% Physical ATK elemen Tanah dan mengurangi Defense seluruh musuh sebesar 35% selama 2 giliran."},
+  {id:"ULT-EAR-015", name:"Titanium Bastion", cost:"100% UG", target:"Diri Sendiri", desc:"Mengubah tubuh menjadi logam murni, mengurangi damage masuk 70% selama 2 giliran dan memantulkan 40% damage ke penyerang."},
+  {id:"ULT-EAR-016", name:"Continental Crush", cost:"100% UG", target:"1 Musuh", desc:"Menjatuhkan pilar batu raksasa, menghasilkan 410% Physical ATK dengan bonus damage masif terhadap target berukuran besar."},
+  {id:"ULT-LGT-017", name:"Judgement of Heaven", cost:"100% UG", target:"Semua Musuh", desc:"Menjatuhkan pilar cahaya suci, menghasilkan 300% Magic ATK elemen Cahaya dan menghapus seluruh buff aktif dari musuh."},
+  {id:"ULT-LGT-018", name:"Sanctuary of Light", cost:"100% UG", target:"Semua Sekutu", desc:"Menciptakan kubah suci, memulihkan 50% HP tim dan memberikan kekebalan terhadap semua status ailment selama 2 giliran."},
+  {id:"ULT-LGT-019", name:"Solar Flare Execution", cost:"100% UG", target:"1 Musuh", desc:"Ledakan sinar matahari terpusat, menghasilkan 420% Magic ATK murni."},
+  {id:"ULT-DRK-020", name:"Abyss Devourer", cost:"100% UG", target:"Semua Musuh", desc:"Membuka gerbang jurang kegelapan, menghasilkan 280% Magic ATK dan menyerap 50% dari total damage sebagai HP tim."},
+  {id:"ULT-DRK-021", name:"Soul Reaper Scythe", cost:"100% UG", target:"1 Musuh", desc:"Tebasan sabit maut, menghasilkan 430% Magic ATK. Jika HP target di bawah 25%, otomatis memicu Instant Kill."},
+  {id:"ULT-DRK-022", name:"Eternal Eclipse", cost:"100% UG", target:"Semua Musuh", desc:"Menyelimuti medan perang dalam kegelapan total, memberikan efek Blind, Silence, dan Poison serentak ke semua musuh selama 2 giliran."},
+  {id:"ULT-COM-023", name:"Plasma Lightning Storm (Cahaya/Udara)", cost:"100% UG", target:"Semua Musuh", desc:"Sambaran petir massal berkecepatan tinggi, menghasilkan 310% Magic ATK dan status Paralysis ke semua musuh selama 1 giliran."},
+  {id:"ULT-COM-024", name:"Volcanic Cataclysm (Api/Tanah)", cost:"100% UG", target:"Semua Musuh", desc:"Erupsi gunung berapi total, menghasilkan 320% Magic ATK campuran Api dan Tanah dengan efek Burn beruntun."},
+  {id:"ULT-COM-025", name:"Glacial Blizzard (Air/Udara)", cost:"100% UG", target:"Semua Musuh", desc:"Badai salju es abadi, menghasilkan 290% Magic ATK dan menurunkan Speed serta Defense seluruh musuh sebesar 25%."},
+  {id:"ULT-COM-026", name:"Dark Matter Singularity (Kegelapan/Cahaya)", cost:"100% UG", target:"1 Musuh", desc:"Menciptakan bola materi gelap yang meledak, menghasilkan 450% Adaptive Damage mengabaikan pertahanan magis."},
+  {id:"ULT-COM-027", name:"Dragonic Rage (Api/Normal)", cost:"100% UG", target:"1 Musuh", desc:"Mengamuk dengan kekuatan naga purba, menghasilkan 400% Physical ATK dan meningkatkan ATK pengguna sebesar 50% selama 2 giliran."},
+  {id:"ULT-COM-028", name:"Sacred Genesis (Cahaya/Air)", cost:"100% UG", target:"Semua Sekutu & Musuh", desc:"Memulihkan 100% HP seluruh tim serta menghapus semua debuff, sekaligus memberikan 200% Magic Damage suci ke semua musuh."},
+  {id:"ULT-COM-029", name:"Shadow Viper Strike (Kegelapan/Tanah)", cost:"100% UG", target:"1 Musuh", desc:"Serangan racun maut bayangan, menghasilkan 380% Physical ATK dan status Deadly Poison berbasis Max HP selama 3 giliran."},
+  {id:"ULT-COM-030", name:"Astral Symphony (Udara/Cahaya)", cost:"100% UG", target:"Semua Sekutu", desc:"Menyanyikan melodi astral: Meningkatkan ATK, Magic ATK, Defense, dan Speed seluruh tim sebesar 25% selama 3 giliran."}
+];
+
+const dbTraits = [
+  {id:"TRT-NOR-001", name:"Sturdy Build", desc:"Mengurangi seluruh damage fisik yang diterima sebesar 10%."},
+  {id:"TRT-NOR-002", name:"Momentum", desc:"Meningkatkan ATK sebesar 5% setiap kali berhasil menyerang musuh (maks 5 lapis/stack)."},
+  {id:"TRT-NOR-003", name:"Adaptable", desc:"Kebal terhadap efek penurunan stat (Stat Debuff) dari musuh."},
+  {id:"TRT-NOR-004", name:"Berserk Will", desc:"Saat HP berada di bawah 30%, Critical Rate meningkat sebesar 25%."},
+  {id:"TRT-FIR-005", name:"Blaze Body", desc:"Memiliki peluang 30% untuk mengenakan efek Burn kepada musuh yang menyerang pengguna menggunakan jarak dekat (melee)."},
+  {id:"TRT-FIR-006", name:"Pyromania", desc:"Meningkatkan Magic ATK sebesar 20% selama target musuh terkena status Burn."},
+  {id:"TRT-FIR-007", name:"Solar Fuel", desc:"Memulihkan 5% Max HP setiap kali pengguna berhasil memicu efek Burn pada musuh."},
+  {id:"TRT-WAT-008", name:"Water Veil", desc:"Mengurangi damage elemen Api yang diterima sebesar 40%."},
+  {id:"TRT-WAT-009", name:"Fluid Grace", desc:"Meningkatkan Evasion sebesar 15% saat HP berada di atas 70%."},
+  {id:"TRT-WAT-010", name:"Regeneration Source", desc:"Memulihkan 4% Max HP di awal setiap giliran (turn)."},
+  {id:"TRT-WND-011", name:"Gale Reflex", desc:"Meningkatkan Speed dasar sebesar 15%."},
+  {id:"TRT-WND-012", name:"Wind Rider", desc:"Memiliki peluang 20% untuk menghindari sepenuhnya (dodge) serangan musuh bertipe proyektil."},
+  {id:"TRT-WND-013", name:"Swift Action", desc:"Pada giliran pertama pertempuran, karakter langsung mendapatkan tambahan 50% Action Gauge."},
+  {id:"TRT-EAR-014", name:"Solid Ground", desc:"Kebal terhadap efek Knockback, Stun, atau dorongan posisi dari musuh."},
+  {id:"TRT-EAR-015", name:"Stone Skin", desc:"Mengurangi semua jenis damage masuk sebesar 15%, namun mengurangi Speed karakter sebesar 10%."},
+  {id:"TRT-EAR-016", name:"Earth Resonance", desc:"Mendapatkan Shield setara 10% Max HP di awal pertempuran."},
+  {id:"TRT-LGT-017", name:"Inner Light", desc:"Meningkatkan efektivitas skill pemulihan (Healing) yang diberikan kepada sekutu sebesar 25%."},
+  {id:"TRT-LGT-018", name:"Aura of Purity", desc:"Mengurangi durasi seluruh debuff negatif yang diterima pengguna sebanyak 1 giliran."},
+  {id:"TRT-LGT-019", name:"Luminescent Grace", desc:"Meningkatkan Magic Resistance sebesar 20% terhadap serangan elemen Kegelapan."},
+  {id:"TRT-DRK-020", name:"Shadow Cloak", desc:"Meningkatkan Evasion sebesar 15% selama giliran malam hari atau di lingkungan gelap."},
+  {id:"TRT-DRK-021", name:"Vampire Touch", desc:"Menyerap 10% dari semua damage yang dihasilkan untuk memulihkan HP pengguna (Life Steal pasif)."},
+  {id:"TRT-DRK-022", name:"Death Toll", desc:"Setiap kali ada musuh yang gugur, ATK pengguna meningkat sebesar 15% hingga akhir pertempuran."},
+  {id:"TRT-COM-023", name:"Overcharge (Listrik/Cahaya)", desc:"Meningkatkan perolehan Ultimate Gauge (UG) sebesar 25% lebih cepat dari aksi normal."},
+  {id:"TRT-COM-024", name:"Magma Heart (Api/Tanah)", desc:"Kebal terhadap efek Burn dan Freeze, serta memberikan tambahan 15% Physical ATK."},
+  {id:"TRT-COM-025", name:"Tempest Soul (Udara/Air)", desc:"Setiap kali menghindari serangan (Evasion sukses), Speed pengguna meningkat 10% selama 2 giliran."},
+  {id:"TRT-COM-026", name:"Eclipse Balance (Cahaya/Kegelapan)", desc:"Jika HP di atas 50%, Magic ATK naik 20%; jika HP di bawah 50%, Defense naik 20%."},
+  {id:"TRT-COM-027", name:"Berserker's Blood (Normal/Api)", desc:"Kehilangan setiap 10% HP akan meningkatkan Critical Damage sebesar 8%."},
+  {id:"TRT-COM-028", name:"Mystic Conduit (Cahaya/Udara)", desc:"Mengurangi penggunaan SP/Mana untuk semua jenis skill sebesar 15%."},
+  {id:"TRT-COM-029", name:"Iron Wall (Tanah/Normal)", desc:"Anggota tim di barisan belakang menerima pengurangan damage sebesar 5% berkat karakter ini di garda depan."},
+  {id:"TRT-COM-030", name:"Apex Predator (Universal/Kombinasi)", desc:"Menghasilkan tambahan 15% damage terhadap musuh yang memiliki HP di bawah 40%."}
+];
+
+function renderHub(page){
+ syncMaster();const c=heroCounts();
+ $("mName").textContent=state.masterName||"MASTER";$("mId").textContent=state.masterId||"MASTER-000000";
+ $("mRank").textContent=rank(state.highestFloor);$("mFloor").textContent=`Floor ${state.highestFloor} / 100`;
+ $("mHeroes").textContent=state.heroes.length;$("mGold").textContent=state.gold.toLocaleString();$("mGems").textContent=state.gems.toLocaleString();
+ $("topFloor").textContent=`${state.highestFloor} / 100`;$("happiness").textContent=state.town.happiness+"%";$("fear").textContent=state.town.fear+"%";$("mood").textContent=state.fairy.mood;
+ document.querySelectorAll(".nav [data-open]").forEach(b=>b.classList.toggle("active",b.dataset.open===page));
+ 
+ const pages={
+ overview:`<h2>Main Menu</h2><div class="sub">Aetheria command center — Update 0.1.4</div>
+ <div class="notice"><b>MASTER PROGRESSION:</b> Tower progress determines Master Rank. Rank determines Title, Town Square facility access and new features. Update 0.1.4 adds delete save functionality and direct title logout.</div>
+ <div class="status-hero"><div class="status-banner"><small>MASTER RANK</small><strong>${state.masterRank}</strong><small>${state.masterTitle}</small></div><div class="status-banner"><small>TOWER PROGRESS</small><strong>${state.highestFloor} / 100</strong><small>Current Floor ${state.currentFloor}</small></div></div>
+ <div class="grid">
+  ${cmd("status","◈","Master Status","Rank, tower, economy, town condition and warnings.")}
+  ${cmd("database","📖","Data Base","Comprehensive catalog of 50 Basic Skills, 30 Ultimate Skills, and 30 Traits.")}
+  ${cmd("recruitment","✦","Recruitment Log","Review recruitment history and let Fairy analyze trends.")}
+  ${cmd("heroes","♙","Hero Roster","Filter heroes by role, status and star.")}
+  ${cmd("party","⚔","Party Management","Build parties using AVAILABLE heroes only.")}
+  ${cmd("inventory","▣","Inventory","Equipment, materials and resource overview.")}
+  ${cmd("town","⌂","Town Square","Facilities, happiness, fear, recovery and Skip Day report.")}
+  ${cmd("dungeon","◇","Dungeon","Pre-battle analysis, risk assessment and battle reports.")}
+  ${cmd("fairy","✦","Fairy AI","Living companion memory, mood, trust and knowledge.")}
+ </div>
+ <div class="conf"><b>FAIRY ADVISORY</b><br>${fairyText()}<br><small>Confidence: HIGH</small></div>`,
+ status:`<h2>Master Status</h2><div class="sub">All values are synchronized from the current Game State.</div><div class="status-hero"><div class="status-banner"><small>MASTER RANK</small><strong>${state.masterRank}</strong><small>${state.masterTitle}</small></div><div class="status-banner"><small>MASTER ID</small><strong style="font-size:15px">${state.masterId||"MASTER-000000"}</strong><small>${state.masterName||"MASTER"}</small></div></div><div class="info">
+ ${item("Master Name",state.masterName||"MASTER")}${item("Master Rank",state.masterRank)}${item("Master Title",state.masterTitle)}${item("Highest Tower Floor",state.highestFloor)}${item("Current Tower Floor",state.currentFloor)}${item("Total Heroes",c.total)}${item("Available Heroes",c.available)}${item("Heroes in Party",c.inParty)}${item("Injured",c.injured)}${item("Dead",c.dead)}${item("Total Parties",state.parties.length)}${item("Party Capacity",`${state.parties.length} / 20`)}${item("Gold",state.gold.toLocaleString())}${item("Gems",state.gems.toLocaleString())}${item("Tickets",state.tickets)}${item("Special Tickets",state.specialTickets)}${item("Town Happiness",state.town.happiness+"%")}${item("Town Fear",state.town.fear+"%")}${item("In-game Day",state.day||1)}
+ </div><div class="rank-up"><b>RANK PROGRESSION</b><div class="rank-table">${MASTER_RANKS.map(x=>`<div class="rank-row"><span>Floor ${x.min}${x.rank==="MASTER"?"":"–"+(x.min+9)}</span><b>${x.rank}</b></div>`).join("")}</div></div><div class="conf"><b>FAIRY ANALYSIS</b><br>${fairyStatus()}</div>`,
+ database:`<h2>Aetheria Data Base</h2><div class="sub">Official compendium of skills, ultimate abilities, and character traits introduced in Update 0.1.4.</div>
+ <div class="db-section">
+   <h3>50 ID Skill Basic</h3>
+   <div class="db-grid">${dbBasicSkills.map(s=>`<div class="db-card"><b>${s.id} | ${s.name}</b><p><b>Target:</b> ${s.target}<br>${s.desc}</p></div>`).join("")}</div>
+ </div>
+ <div class="db-section">
+   <h3>30 ID Skill Ultimate</h3>
+   <div class="db-grid">${dbUltimateSkills.map(s=>`<div class="db-card"><b>${s.id} | ${s.name}</b><p><b>Cost:</b> ${s.cost} | <b>Target:</b> ${s.target}<br>${s.desc}</p></div>`).join("")}</div>
+ </div>
+ <div class="db-section">
+   <h3>30 ID Trait (Passive Ability)</h3>
+   <div class="db-grid">${dbTraits.map(t=>`<div class="db-card"><b>${t.id} | ${t.name}</b><p>${t.desc}</p></div>`).join("")}</div>
+ </div>`,
+ recruitment:`<h2>Recruitment Log</h2><div class="sub">Type • Cost • Hero ID • Name • Race • Role • Star • New/Duplicate • Result</div>
+ <div class="log">${(state.recruitmentLog.length?state.recruitmentLog: [{type:"SYSTEM",cost:"—",heroId:"—",name:"No recruitment yet",race:"—",role:"—",star:"—",result:"WAITING"}]).slice().reverse().map(x=>`<div class="log-item"><strong>${x.type}</strong> · ${x.cost}<br>${x.heroId} — ${x.name} · ${x.race} · ${x.role} · ${x.star}<br>${x.newDuplicate||"NEW"} · ${x.result}</div>`).join("")}</div>
+ <div class="conf"><b>FAIRY RECRUITMENT ANALYSIS</b><br>${state.recruitmentLog.length?"I can compare star distribution, results, and duplicate trends as more recruitment data accumulates.":"No recruitment trend exists yet. I will begin learning from the first result."}</div>`,
+ heroes:heroPage(),
+ party:partyPage(),
+ inventory:`<h2>Inventory</h2><div class="sub">Equipment and materials available to the Master.</div><div class="info">${item("Equipment",state.equipment.length)}${item("Materials",state.materials.length)}${item("Gold",state.gold.toLocaleString())}${item("Medical","Ready")}</div>`,
+ town:`<h2>Town Square</h2><div class="sub">Facilities unlock and upgrade automatically with permanent Master Rank.</div><div class="info">${item("Happiness",state.town.happiness+"%")}${item("Fear",state.town.fear+"%")}${Object.entries(state.town.facilities).map(([n,f])=>item(n,`Unlock ${f.rank} · Lv.${f.level}`)).join("")}</div><button class="btn primary" style="margin-top:12px" onclick="skipDay()">SKIP DAY</button>
+ <div class="conf"><b>FAIRY TOWN REPORT</b><br>${state.town.happiness>=60?"The town feels hopeful.":"The town is fragile. Small decisions may affect morale."}</div>`,
+ dungeon:`<h2>Dungeon</h2><div class="sub">Before entering, Fairy evaluates the current state.</div><div class="info">${item("Enemy Strength","Unknown — scout required")}${item("Party Strength",partyStrength())}${item("Risk Level",state.heroes.length?"MEDIUM":"CRITICAL")}${item("Medical","Ready")}</div><button class="btn primary" style="margin-top:12px" onclick="preBattle()">RUN PRE-BATTLE ANALYSIS</button>
+ <div class="conf"><b>FAIRY RULE</b><br>If estimated victory is too low, Fairy will explicitly say <span class="danger">DO NOT ENTER</span>.</div>`,
+ fairy:`<h2>Fairy System — Aetheria</h2><div class="sub">Living companion state.</div><div class="info">${item("Mood",state.fairy.mood)}${item("Personality",state.fairy.personality)}${item("Trust",state.fairy.trust)}${item("Knowledge",state.fairy.knowledge)}${item("Memories",state.fairy.memory.length)}${item("Mistakes Remembered",state.fairy.mistakes)}</div>
+ <div class="conf"><b>CURRENT THOUGHT</b><br>${fairyText()}<br><br><b>Core rule:</b> recommendations use only the current Game State and AVAILABLE heroes.</div>`
+ };
+ $("content").innerHTML=pages[page]||pages.overview;
+}
+function cmd(page,icon,title,desc){return `<div class="command" onclick="renderHub('${page}')"><div class="icon">${icon}<span class="badge">OPEN</span></div><h3>${title}</h3><p>${desc}</p></div>`}
+function item(a,b){return `<div class="info-item"><small>${a}</small><b>${b}</b></div>`}
+function fairyText(){if(!state.heroes.length)return "Master, we have no heroes yet. I won't recommend anyone until an AVAILABLE hero exists.";if(state.town.fear>70)return "Master, the town is afraid. I recommend stabilizing it before taking unnecessary risks.";return "The current state is stable. I will continue learning from your decisions."}
+function fairyStatus(){let w=[];if(state.gold<500)w.push("Gold is getting low.");if(state.town.fear>50)w.push("Town Fear is elevated.");if(!w.length)w.push("No critical warning detected.");return w.join(" ")}
+function partyStrength(){let av=state.heroes.filter(h=>h.status==="AVAILABLE");return av.length?Math.min(99,40+av.reduce((a,h)=>a+h.star*7+h.level,0))+"%":"0%"}
+function heroPage(){return `<h2>Hero Roster</h2><div class="sub">Combined filters can be used together. Example: Mage + Available + ★★★★+.</div>
+<div class="filterbar" id="filters"><span class="chip on" data-role="ALL">All Roles</span><span class="chip" data-role="Mage">Mage</span><span class="chip" data-role="Tank">Tank</span><span class="chip" data-role="Support">Support</span><span class="chip" data-role="DPS">DPS</span><span class="chip on" data-status="AVAILABLE">Available</span><span class="chip" data-status="BUSY">Busy</span><span class="chip" data-star="4">★★★★+</span></div>
+<div id="heroList">${heroRows()}</div>`}
+function heroRows(){let hs=state.heroes;return hs.length?hs.map(h=>`<div class="hero"><div class="avatar">★${h.star}</div><div><b>${h.name}</b><small>${h.id} · ${h.role} · Lv.${h.level} · ${h.element}</small></div><div class="status ${h.status!=="AVAILABLE"?"busy":""}">${h.status}</div></div>`).join(""):`<div class="conf">No heroes have been recruited. Fairy will never invent a Hero.</div>`}
+function partyPage(){let av=state.heroes.filter(h=>h.status==="AVAILABLE");let selected=av.slice(0,5);return `<h2>Party Management</h2><div class="sub">Fairy recommendation uses AVAILABLE heroes only.</div><div class="conf"><b>RECOMMENDED PARTY</b><br>${selected.length?selected.map((h,i)=>`${i+1}. ${h.name} — ${h.role}, ★${h.star} — selected for availability and current role balance.`).join("<br>"):"NO SAFE PARTY"}<br><br><b>Confidence:</b> ${selected.length>=3?"MEDIUM":"LOW"}</div><div style="margin-top:12px">${selected.map(h=>`<div class="hero"><div class="avatar">★${h.star}</div><div><b>${h.name}</b><small>${h.role} · ${h.condition}</small></div><div class="status">AVAILABLE</div></div>`).join("")}</div>`}
+function preBattle(){let av=state.heroes.filter(h=>h.status==="AVAILABLE");let victory=Math.min(95,35+av.length*10+av.reduce((a,h)=>a+h.star*3,0));let risk=victory<50?"CRITICAL":victory<70?"HIGH":victory<85?"MEDIUM":"LOW";let safe=victory>=60;openModal("Pre-Battle Recommendation",`<div class="info">${item("Victory Estimate",victory+"%")}${item("Survival Estimate",Math.max(10,victory-8)+"%")}${item("Risk Level",risk)}${item("Recommended Party",av.slice(0,5).map(h=>h.name).join(", ")||"None")}</div><div class="conf"><b>FAIRY DECISION</b><br>${safe?"I recommend entering only if the selected formation remains AVAILABLE and healthy.":"<span class='danger'>DO NOT ENTER.</span> The current probability is too low for a responsible recommendation."}<br><br><b>Confidence:</b> ${av.length>=3?"MEDIUM":"LOW"}</div>`)}
+function skipDay(){let recovered=state.heroes.filter(h=>h.status!=="AVAILABLE").length;state.heroes.forEach(h=>{h.status="AVAILABLE";h.condition="Healthy";h.hp=h.maxHp});state.town.happiness=Math.min(100,state.town.happiness+2);state.town.fear=Math.max(0,state.town.fear-1);state.skipDayReports.push({date:new Date().toISOString(),recovered,happiness:state.town.happiness,fear:state.town.fear});state.fairy.mood="PROUD";state.fairy.memory.push("Skip Day: heroes recovered and town condition changed.");fairySay("A new day has passed, Master. The heroes are recovering, and the town feels a little steadier.");renderHub("town");}
+function openModal(title,body){$("modalTitle").textContent=title;$("modalBody").innerHTML=body;$("modal").classList.add("show")}
+function closeModal(){$("modal").classList.remove("show")}
+
+function showSave(){
+  let s=saves();
+  openModal("Continue / Save & Delete Management",`<div class="grid">${Object.keys(s).map(i=>`<div style="display:flex;flex-direction:column;gap:5px;"><button class="btn" onclick="${s[i]?`loadSlot(${i})`:`saveSlot(${i})`}">SLOT ${i}<br><small>${s[i]?`${s[i].masterName} · Floor ${s[i].highestFloor}`:"EMPTY"}</small></button>${s[i]?`<button class="btn danger" style="padding:6px;font-size:10px;" onclick="deleteSlot(${i})">DELETE SAVE</button>`:""}</div>`).join("")}</div>`);
+}
+window.saveSlot=i=>{save(i);openModal("Saved",`Game saved to Slot ${i}.`);checkContinue()}
+window.loadSlot=i=>{let s=saves();if(!s[i])return;state=JSON.parse(JSON.stringify(s[i]));state.version="0.1.4";syncMaster();activeSlot=i;closeModal();show("hub")}
+window.deleteSlot=i=>{let s=saves();s[i]=null;writeSaves(s);openModal("Deleted",`Save Slot ${i} has been deleted.`);checkContinue();setTimeout(showSave,1000);}
+
+function checkContinue(){$("continue").disabled=!Object.values(saves()).some(Boolean)}
+
+$("newGame").onclick=()=>{storyIndex=0;$("storyText").textContent=story[0];show("story")}
+$("next").onclick=()=>{storyIndex++;if(storyIndex>=story.length){show("creation")}else $("storyText").textContent=story[storyIndex]}
+$("skip").onclick=()=>{storyIndex=story.length-1;$("storyText").textContent=story[storyIndex]}
+$("confirm").onclick=()=>{let n=$("masterName").value.trim();if(n.length<3||n.length>20){$("error").textContent="Master name must be 3–20 characters.";return}$("error").textContent="";state={...state,version:"0.1.4",masterName:n,masterId:"MASTER-"+Math.floor(100000+Math.random()*900000),createdAt:new Date().toISOString().slice(0,10),lastSaved:new Date().toISOString().slice(0,10)};save(1);activeSlot=1;fairySay("Master, I'm online. I will observe, remember, and warn you when your strategy is unsafe.");show("hub")}
+$("continue").onclick=()=>{let s=saves();let k=Object.keys(s).find(k=>s[k]);if(k)loadSlot(k)}
+$("loadSave").onclick=showSave;$("saveHub").onclick=showSave;
+$("settings").onclick=()=>openModal("Settings","Settings will be expanded in a later update. Core save data is preserved in this version.");
+
+// Exit game functionality (close window or show notification if blocked by browser)
+$("exit").onclick=()=>{
+  if(confirm("Apakah Anda yakin ingin keluar dari permainan?")) {
+    window.close();
+    // Fallback if window.close() is blocked by browser security
+    document.body.innerHTML = "<div style='display:grid;place-items:center;height:100vh;background:#05070d;color:#eaf0ff;text-align:center;'><h2>Aetheria Session Terminated.</h2><p>Anda dapat menutup tab browser ini secara manual.</p></div>";
+  }
+};
+
+// Logout returns directly to title screen
+$("logout").onclick=()=>{
+  if(confirm("Kembali ke Main Menu (Title Screen)? Pastikan game sudah disimpan.")) {
+    show("title");
+  }
+};
+
+document.querySelectorAll(".nav [data-open]").forEach(b=>b.onclick=()=>renderHub(b.dataset.open));
+document.addEventListener("click",e=>{if(e.target.matches(".chip")){document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));e.target.classList.add("on");}});
+checkContinue();
+</script>
+</body>
+</html>
