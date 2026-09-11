@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aetheria — Update 0.1.8</title>
+<style>
+:root{
+  --bg:#070a12;--panel:#101625;--panel2:#151d2e;--line:#2a3855;
+  --text:#eaf0ff;--muted:#8f9db8;--gold:#f2cf70;--cyan:#70d9e8;
+  --green:#69d69a;--red:#ef7474;--purple:#ad91ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,"Segoe UI",sans-serif;user-select:none}
+body{height:100vh;background:radial-gradient(circle at 50% 0,#1a2340 0,#090d17 42%,#05070d 100%);color:var(--text);overflow:hidden}
+button,input{font:inherit}
+#game{height:100%;position:relative;overflow:hidden}
+#game:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(112,217,232,.035) 50%,transparent 65%);pointer-events:none}
+.screen{position:absolute;inset:0;display:none;z-index:2}
+.screen.active{display:flex}
+
+/* TITLE */
+#title{align-items:center;justify-content:center}
+.title-wrap{width:min(900px,92vw);text-align:center;position:relative}
+.emblem{width:92px;height:92px;margin:0 auto 22px;border:1px solid rgba(242,207,112,.55);border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#273557,#0c111e);box-shadow:0 0 50px rgba(242,207,112,.12)}
+.emblem span{font-size:38px;color:var(--gold);text-shadow:0 0 25px rgba(242,207,112,.65)}
+.logo{font-size:clamp(48px,8vw,82px);letter-spacing:13px;font-weight:800;text-shadow:0 0 30px rgba(112,217,232,.18)}
+.tag{color:var(--muted);letter-spacing:5px;margin-top:8px;font-size:13px}
+.version{display:inline-block;margin:20px 0 28px;padding:6px 12px;border:1px solid var(--line);border-radius:20px;color:var(--cyan);font-size:11px;letter-spacing:2px}
+.menu{width:min(420px,90vw);margin:auto;display:grid;gap:9px}
+.btn{border:1px solid var(--line);background:linear-gradient(180deg,#172137,#101827);color:var(--text);padding:14px 18px;border-radius:9px;cursor:pointer;transition:.18s;letter-spacing:1px}
+.btn:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px);box-shadow:0 8px 25px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.primary{border-color:rgba(242,207,112,.4)}
+.btn.danger:hover{border-color:var(--red)}
+.footer{margin-top:28px;color:#687692;font-size:11px}
+
+/* STORY / CREATION */
+.center{width:min(760px,92vw);margin:auto}
+.card{background:rgba(16,22,37,.94);border:1px solid var(--line);border-radius:16px;box-shadow:0 25px 70px rgba(0,0,0,.38);padding:30px}
+.story-title{color:var(--gold);font-size:12px;letter-spacing:3px;margin-bottom:20px}
+.prologue-card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(18,25,43,.97),rgba(8,12,22,.97));border-color:rgba(242,207,112,.28);box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 80px rgba(242,207,112,.06)}
+.prologue-card:before{content:"";position:absolute;inset:10px;border:1px solid rgba(242,207,112,.08);border-radius:11px;pointer-events:none}
+.prologue-mark{text-align:center;color:var(--gold);font-size:22px;letter-spacing:8px;text-shadow:0 0 24px rgba(242,207,112,.5);margin-bottom:8px}
+.prologue-kicker{text-align:center;color:var(--cyan);font-size:9px;letter-spacing:4px;margin-bottom:7px}
+.prologue-title{text-align:center;font-size:30px;letter-spacing:9px;font-weight:700}
+.prologue-rule{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:14px auto 4px}
+.prologue-note{text-align:center;color:#687692;font-size:9px;letter-spacing:3px;margin-top:8px}
+.rank-up{border:1px solid rgba(242,207,112,.35);background:linear-gradient(145deg,#1d2942,#111827);padding:14px;border-radius:12px;margin-top:12px}
+.rank-table{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.rank-row{padding:9px 10px;background:#0a111e;border:1px solid #202d46;border-radius:8px;font-size:10px;display:flex;justify-content:space-between}.rank-row b{color:var(--gold)}
+.story{min-height:300px;display:grid;align-content:center;text-align:center;white-space:pre-line;line-height:1.9;font-size:18px}
+.actions{display:flex;gap:10px}.actions>*{flex:1}
+input{width:100%;background:#090e19;color:var(--text);border:1px solid var(--line);padding:14px;border-radius:9px;outline:none;text-align:center}
+input:focus{border-color:var(--gold)}
+.error{height:22px;color:var(--red);font-size:12px;text-align:center}
+
+/* HUB */
+#hub{padding:18px}
+.hub{width:min(1180px,100%);height:100%;margin:auto;display:grid;grid-template-columns:300px 1fr;gap:14px}
+.panel{background:rgba(12,18,31,.92);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.panel-head{padding:15px 17px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#172239,#101827)}
+.panel-head small{display:block;color:var(--muted);font-size:10px;letter-spacing:2px;margin-bottom:4px}
+.panel-head strong{font-size:17px}
+.left{display:flex;flex-direction:column}
+.master{padding:17px;border-bottom:1px solid var(--line)}
+.master-name{font-size:23px;font-weight:750}.master-id{font-size:10px;color:var(--muted);margin-top:4px}
+.stat{display:flex;justify-content:space-between;margin-top:13px;font-size:12px;color:var(--muted)}.stat b{color:var(--text)}
+.fairy-mini{margin:15px;background:linear-gradient(145deg,#17233a,#101827);border:1px solid #344668;border-radius:12px;padding:14px}
+.fairy-mini .top{display:flex;justify-content:space-between;align-items:center}.fairy-dot{width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.fairy-mini p{font-size:12px;line-height:1.6;color:#c6d2e9;margin-top:9px}
+.nav{padding:12px;display:grid;gap:6px;overflow:auto}.nav .btn{text-align:left;padding:11px 13px;font-size:12px}
+.nav .btn.active{border-color:var(--gold);background:#1b263e}
+.main{display:grid;grid-template-rows:auto 1fr;min-width:0}
+.hub-top{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px;border-bottom:1px solid var(--line)}
+.metric{padding:12px;background:#0d1423;border:1px solid #202d46;border-radius:10px}.metric small{color:var(--muted);font-size:9px;letter-spacing:1.5px}.metric strong{display:block;margin-top:6px;font-size:18px}
+.content{padding:18px;overflow:auto}.content h2{font-size:20px;margin-bottom:5px}.sub{color:var(--muted);font-size:12px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.notice{padding:12px;border:1px solid rgba(112,217,232,.22);background:#0d1727;border-radius:10px;color:#c6d2e9;font-size:11px;line-height:1.55;margin-bottom:11px}.notice b{color:var(--cyan)}
+.status-hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-bottom:11px}.status-banner{padding:15px;border:1px solid #2d3d5b;border-radius:12px;background:linear-gradient(145deg,#172239,#0d1422)}.status-banner small{display:block;color:var(--muted);font-size:9px;letter-spacing:1.5px}.status-banner strong{display:block;font-size:25px;color:var(--gold);margin:4px 0}.status-banner small:last-child{color:#c6d2e9;letter-spacing:.5px}
+.command{padding:17px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(145deg,#141d30,#0d1422);cursor:pointer}
+.command:hover{border-color:#657da8;transform:translateY(-1px)}
+.command .icon{font-size:22px;margin-bottom:9px}.command h3{font-size:14px}.command p{font-size:11px;color:var(--muted);line-height:1.55;margin-top:5px}
+.badge{float:right;font-size:9px;padding:4px 7px;border-radius:10px;border:1px solid #34435f;color:var(--cyan)}
+.badge.lock{color:var(--red)}
+
+/* DATABASE CARDS */
+.db-section{margin-bottom:20px}
+.db-section h3{color:var(--gold);font-size:15px;margin-bottom:10px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.db-card{background:#0a111e;border:1px solid #202d46;border-radius:10px;padding:12px;font-size:11px}
+.db-card b{color:var(--cyan);display:block;margin-bottom:4px;font-size:12px}
+.db-card p{color:var(--muted);line-height:1.4}
+
+/* MODAL / DETAIL */
+.modal{position:absolute;inset:0;background:rgba(2,5,10,.85);backdrop-filter:blur(7px);display:none;place-items:center;z-index:20;padding:18px}.modal.show{display:grid}
+.modal-box{width:min(920px,96vh);max-height:92vh;overflow:auto;background:#0e1626;border:1px solid #3b4e73;border-radius:16px;box-shadow:0 30px 100px #000;padding:22px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:13px;margin-bottom:15px}.modal-head h2{font-size:17px}.close{background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer}
+.info{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.info-item{background:#0a111e;border:1px solid #202d46;border-radius:10px;padding:12px}.info-item small{color:var(--muted);display:block;font-size:9px}.info-item b{display:block;margin-top:5px}
+.log{display:grid;gap:8px}.log-item{border-left:2px solid var(--cyan);background:#0a111e;padding:11px;font-size:11px;line-height:1.55}.log-item strong{color:var(--gold)}
+
+/* FILTERBAR & HERO ROSTER UI */
+.filterbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:15px;background:#0d1422;padding:12px;border:1px solid var(--line);border-radius:12px}
+.filter-group label{display:block;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:5px}
+.filter-options{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:6px 10px;border-radius:16px;border:1px solid var(--line);background:#0a111e;color:var(--muted);font-size:10px;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--cyan);color:var(--text)}
+.chip.on{color:var(--gold)!important;border-color:var(--gold)!important;background:rgba(242,207,112,.1)}
+
+.hero-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.hero-card{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0a111e;cursor:pointer;transition:.15s}
+.hero-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.avatar{width:45px;height:45px;border-radius:10px;background:#172239;border:1px solid var(--line);display:grid;place-items:center;color:var(--gold);font-weight:700;font-size:14px}
+.hero-card-info{flex:1;min-width:0}
+.hero-card-info b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero-card-info small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.status{font-size:10px;color:var(--green)}
+.status.busy{color:var(--red)}
+
+/* EXP BAR & DETAIL STYLES */
+.exp-container{background:#0a111e;border:1px solid #202d46;border-radius:10px;padding:12px;margin:10px 0}
+.exp-bar-bg{width:100%;height:10px;background:#172239;border-radius:5px;overflow:hidden;margin:6px 0}
+.exp-bar-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--gold));border-radius:5px}
+.equip-slot{background:#0a111e;border:1px solid #202d46;border-radius:8px;padding:10px;margin-bottom:6px;font-size:11px}
+.equip-slot b{color:var(--cyan);display:block;margin-bottom:2px}
+
+/* PARTY MANAGEMENT UI */
+.party-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.party-card{background:#0a111e;border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:.15s}
+.party-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.party-slots-preview{display:flex;gap:4px;margin-top:8px}
+.slot-mini{flex:1;height:24px;background:#172239;border:1px solid var(--line);border-radius:4px;font-size:9px;display:grid;place-items:center;color:var(--muted);overflow:hidden;white-space:nowrap}
+.slot-mini.filled{background:#1b263e;color:var(--gold);border-color:var(--cyan)}
+
+.formation-container{display:grid;gap:12px;margin-top:10px}
+.formation-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.formation-row.back{grid-template-columns:repeat(2,1fr);width:66%;margin:auto}
+.slot-box{background:#0a111e;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;min-height:75px;display:grid;place-content:center;cursor:pointer;transition:.15s}
+.slot-box:hover{border-color:var(--cyan)}
+.slot-box.filled{border-color:var(--gold);background:linear-gradient(145deg,#172239,#0d1422)}
+
+.medical-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+.medical-box{background:#0a111e;border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center;font-size:10px;min-height:50px;display:grid;place-content:center;color:var(--muted)}
+
+.conf{padding:12px;border-radius:10px;border:1px solid #354b6e;background:#111d31;margin-top:10px}.conf b{color:var(--gold)}.danger{color:var(--red)}.good{color:var(--green)}
+@media(max-width:850px){.hub{grid-template-columns:1fr}.left{display:none}.hub-top{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="game">
+
+<section id="title" class="screen active">
+  <div class="title-wrap">
+    <div class="emblem"><span>✦</span></div>
+    <div class="logo">AETHERIA</div>
+    <div class="tag">THE WORLD AFTER THE END</div>
+    <div class="version">SYSTEM UPDATE 0.1.8</div>
+    <div class="menu">
+      <button class="btn primary" id="newGame">NEW GAME</button>
+      <button class="btn" id="continue" disabled>CONTINUE</button>
+      <button class="btn" id="loadSave">LOAD / SAVE</button>
+      <button class="btn" id="settings">SETTINGS</button>
+      <button class="btn danger" id="exit">EXIT</button>
+    </div>
+    <div class="footer">GAME MASTER SYSTEM • AETHERIA CORE</div>
+  </div>
+</section>
+
+<section id="story" class="screen">
+ <div class="center card prologue-card">
+   <div class="prologue-mark">✦</div>
+   <div class="prologue-kicker">AETHERIA • ORIGIN RECORD</div>
+   <div class="prologue-title">PROLOGUE</div>
+   <div class="prologue-rule"></div>
+   <div class="story" id="storyText"></div>
+   <div class="prologue-note">THE RECORD IS INCOMPLETE</div>
+   <div class="actions" style="margin-top:18px"><button class="btn" id="skip">SKIP</button><button class="btn primary" id="next">NEXT</button></div>
+ </div>
+</section>
+
+<section id="creation" class="screen">
+ <div class="center card">
+   <div class="story-title">GAME MASTER SYSTEM // INITIALIZATION</div>
+   <div class="story" style="min-height:210px"><div>
+     <h2 style="margin-bottom:12px">Choose your Master name</h2>
+     <p style="color:var(--muted);font-size:13px;line-height:1.7">The system has selected you.<br>Enter the name by which Aetheria will remember its Master.</p>
+   </div></div>
+   <input id="masterName" maxlength="20" placeholder="3–20 CHARACTERS">
+   <div class="error" id="error"></div>
+   <button class="btn primary" id="confirm">CONFIRM MASTER</button>
+ </div>
+</section>
+
+<section id="hub" class="screen">
+ <div class="hub">
+  <aside class="panel left">
+   <div class="panel-head"><small>GAME MASTER SYSTEM</small><strong>AETHERIA CORE</strong></div>
+   <div class="master">
+     <div class="master-name" id="mName">MASTER</div><div class="master-id" id="mId">MASTER-000000</div>
+     <div class="stat"><span>Rank</span><b id="mRank">F-Rank</b></div>
+     <div class="stat"><span>Tower</span><b id="mFloor">Floor 0 / 100</b></div>
+     <div class="stat"><span>Heroes</span><b id="mHeroes">0</b></div>
+     <div class="stat"><span>Gold</span><b id="mGold">1,000,000</b></div>
+     <div class="stat"><span>Gems</span><b id="mGems">1,000,000</b></div>
+   </div>
+   <div class="fairy-mini"><div class="top"><b>✦ FAIRY // AETHERIA</b><span class="fairy-dot"></span></div><p id="fairyMini">I'm online, Master. I'll keep watching the state of Aetheria.</p></div>
+   <nav class="nav">
+    <button class="btn active" data-open="overview">⌂ Main Menu</button>
+    <button class="btn" data-open="status">◈ Master Status</button>
+    <button class="btn" data-open="database">📖 Data Base</button>
+    <button class="btn" data-open="recruitmentMenu">✦ Recruitment</button>
+    <button class="btn" data-open="recruitment">📋 Recruitment Log</button>
+    <button class="btn" data-open="heroes">♙ Hero Roster</button>
+    <button class="btn" data-open="party">⚔ Party Management</button>
+    <button class="btn" data-open="inventory">▣ Inventory</button>
+    <button class="btn" data-open="town">⌂ Town Square</button>
+    <button class="btn" data-open="dungeon">◇ Dungeon</button>
+    <button class="btn" id="saveHub">▤ Continue / Save</button>
+    <button class="btn danger" id="logout">LOGOUT</button>
+   </nav>
+  </aside>
+
+  <main class="panel main">
+   <div class="hub-top">
+    <div class="metric"><small>TOWER PROGRESS</small><strong id="topFloor">0 / 100</strong></div>
+    <div class="metric"><small>TOWN HAPPINESS</small><strong id="happiness">50%</strong></div>
+    <div class="metric"><small>TOWN FEAR</small><strong id="fear">0%</strong></div>
+    <div class="metric"><small>FAIRY MOOD</small><strong id="mood">CURIOUS</strong></div>
+   </div>
+   <div class="content" id="content"></div>
+  </main>
+ </div>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box"><div class="modal-head"><h2 id="modalTitle">System</h2><button class="close" onclick="closeModal()">×</button></div><div id="modalBody"></div></div></div>
+</div>
+
+<script>
+const KEY="aetheria_game_saves_v1";
+const story=[
+"THE WORLD HAS ALREADY ENDED.",
+"Aetheria was once a world of kingdoms, magic, and countless races.\nHumans. Elves. Dwarves. Beastfolk. Dragonkin. Demons. Merfolk.",
+"But everything changed.",
+"For thousands of years, Nythar, the Dark God, remained sealed away.\nThen the Cult of Eternal Night broke the seal.",
+"Reality collapsed. Cities fell. Kingdoms disappeared. Forests died.\nAETHERIA FELL.",
+"Then a tower appeared.\n\nTHE TOWER OF REBIRTH\n\n100 FLOORS.\n\nThe only known path toward Nythar.",
+"The Game Master System selected someone.\n\nYOU.\n\nTHE MASTER.",
+"You have no army. No kingdom. No legendary weapon.\nBut you have one final opportunity.\nClimb the Tower. Gather survivors. Discover the truth. Defeat Nythar.",
+"THE PACT\n\nReach Floor 100.\nDefeat Nythar.\nFulfill the pact.\n\nThen, perhaps, Aetheria can be reborn."
+];
+let storyIndex=0;
+let state=null;
+let activeSlot=null;
+
+function createFreshState(){
+  let initialParties = [];
+  for(let i=1; i<=20; i++){
+    initialParties.push({
+      id: i,
+      name: `PARTY ${i < 10 ? '0'+i : i}`,
+      front: [null, null, null],
+      back: [null, null],
+      medical: [null, null, null, null, null]
+    });
+  }
+  return {
+    version:"0.1.8",
+    currentScreen:"title",
+    masterName:"",
+    masterId:"",
+    highestFloor:0,
+    currentFloor:0,
+    day:1,
+    masterRank:"F",
+    masterTitle:"New Master",
+    gold:1000000,
+    gems:1000000,
+    tickets:100,
+    specialTickets:100,
+    heroes:[],
+    parties: initialParties,
+    equipment:[],
+    materials:[],
+    town:{happiness:50,fear:0,facilities:{Inn:{rank:"E",level:0},Blacksmith:{rank:"D",level:0},"Tower Magic":{rank:"B",level:0},"Training Ground":{rank:"A",level:0},Dormitory:{rank:"E",level:0},"Fairy System":{rank:"F",level:1}}},
+    fairy:{mood:"CURIOUS",personality:"CURIOUS",trust:10,knowledge:1,memory:[],mistakes:0},
+    recruitmentLog:[],
+    battleReports:[],
+    explorationReports:[],
+    skipDayReports:[],
+    playTime:0,
+    lastSaved:"",
+    createdAt:""
+  };
+}
+
+state=createFreshState();
+
+const $=id=>document.getElementById(id);
+const screens={title:$("title"),story:$("story"),creation:$("creation"),hub:$("hub")};
+function show(name){Object.values(screens).forEach(x=>x.classList.remove("active"));screens[name].classList.add("active");state.currentScreen=name; if(name==="hub")renderHub("overview")}
+const MASTER_RANKS=[
+ {rank:"F",title:"New Master",min:1},{rank:"E",title:"Tower Initiate",min:10},{rank:"D",title:"Tower Adventurer",min:20},{rank:"C",title:"Tower Commander",min:30},{rank:"B",title:"Tower Strategist",min:40},{rank:"A",title:"Tower Lord",min:50},{rank:"S",title:"Grand Master",min:60},{rank:"SS",title:"Legendary Master",min:70},{rank:"SSS",title:"Mythic Master",min:80},{rank:"EX",title:"Transcendent Master",min:90},{rank:"MASTER",title:"Master of Aetheria",min:100}
+];
+function rankData(f){let d=MASTER_RANKS[0];for(const x of MASTER_RANKS)if(f>=x.min)d=x;return d}
+function rank(f){return rankData(f).rank}
+function title(f){return rankData(f).title}
+function heroCounts(){return {total:state.heroes.length,available:state.heroes.filter(h=>h.status==="AVAILABLE").length,inParty:state.heroes.filter(h=>h.status==="IN_PARTY"||h.status==="BUSY").length,injured:state.heroes.filter(h=>h.status==="INJURED").length,dead:state.heroes.filter(h=>h.status==="DEAD").length}}
+function syncMaster(){
+ const d=rankData(state.highestFloor);state.masterRank=d.rank;state.masterTitle=d.title;
+ if(state.currentFloor==null)state.currentFloor=state.highestFloor;if(state.day==null)state.day=1;
+ if(!state.town.facilities)state.town.facilities={};
+ const defaults={Inn:"E",Blacksmith:"D","Tower Magic":"B","Training Ground":"A",Dormitory:"E","Fairy System":"F"};
+ for(const f of Object.keys(defaults)){if(!state.town.facilities[f])state.town.facilities[f]={rank:defaults[f],level:0}}
+ const rankIndex=MASTER_RANKS.findIndex(x=>x.rank===state.masterRank);
+ for(const [f,obj] of Object.entries(state.town.facilities)){const unlock=MASTER_RANKS.findIndex(x=>x.rank===obj.rank);obj.level=Math.max(0,rankIndex-unlock+1)}
+ if(state.masterRank==="F"&&state.highestFloor===0){state.town.facilities["Fairy System"].level=1}
+ if(!state.parties || state.parties.length < 20){
+   if(!state.parties) state.parties = [];
+   while(state.parties.length < 20){
+     let i = state.parties.length + 1;
+     state.parties.push({
+       id: i,
+       name: `PARTY ${i < 10 ? '0'+i : i}`,
+       front: [null, null, null],
+       back: [null, null],
+       medical: [null, null, null, null, null]
+     });
+   }
+ }
+}
+function clearTowerFloor(floor){
+ const previous=state.highestFloor;state.currentFloor=Math.max(0,Math.min(100,floor));
+ if(floor>state.highestFloor){state.highestFloor=Math.min(100,floor);const before=rankData(previous).rank;syncMaster();if(rankData(state.highestFloor).rank!==before){state.fairy.knowledge+=1;state.fairy.memory.push(`Master Rank increased to ${state.masterRank} — ${state.masterTitle}.`);openModal("RANK UP",`<div class="rank-up"><b>MASTER RANK INCREASED</b><br><strong style="font-size:24px;color:var(--gold)">${state.masterRank}</strong><br>${state.masterTitle}<br><br>Highest Tower Floor: ${state.highestFloor}<br>Town Square facilities have been synchronized.<br>Fairy knowledge has been updated.</div>`)}}else syncMaster();save(activeSlot||1)
+}
+function saves(){let s=localStorage.getItem(KEY);if(!s){let x={};for(let i=1;i<=10;i++)x[i]=null;localStorage.setItem(KEY,JSON.stringify(x));return x}return JSON.parse(s)}
+function writeSaves(s){localStorage.setItem(KEY,JSON.stringify(s));$("continue").disabled=!Object.values(s).some(Boolean)}
+function save(slot){syncMaster();state.lastSaved=new Date().toLocaleDateString("en-US");let s=saves();s[slot]=JSON.parse(JSON.stringify(state));writeSaves(s);activeSlot=slot}
+function fairySay(text){$("fairyMini").textContent=text}
+
+/* DATABASE ARRAYS */
+const dbBasicSkills = [
+  {id:"BS-NOR-001", name:"Slash", target:"1 Enemy", desc:"Attacks with a standard slash, dealing 100% Physical ATK as damage. Restores 5 SP."},
+  {id:"BS-NOR-002", name:"Quick Jab", target:"1 Enemy", desc:"Fast attack with high priority, dealing 80% Physical ATK."},
+  {id:"BS-NOR-003", name:"Heavy Smash", target:"1 Enemy", desc:"Heavy high-damage blow, dealing 130% Physical ATK, but reducing user's Speed by 10% for 1 turn."},
+  {id:"BS-NOR-004", name:"Double Strike", target:"1 Enemy", desc:"Unleashes two consecutive strikes, each dealing 60% Physical ATK."},
+  {id:"BS-NOR-005", name:"Guard Break", target:"1 Enemy", desc:"Deals 90% Physical ATK and reduces target's Defense by 15% for 2 turns."},
+  {id:"BS-NOR-006", name:"Point Blank", target:"1 Enemy", desc:"Close-range shot ignoring 10% of target's Defense, dealing 110% Physical ATK."},
+  {id:"BS-NOR-007", name:"Sweep Kick", target:"All Enemies", desc:"Sweeps all enemies with a kick, dealing 50% Physical ATK per target."},
+  {id:"BS-NOR-008", name:"Piercing Thrust", target:"1 Enemy", desc:"High-precision thrust with a 30% chance to land a Critical Hit, dealing 100% Physical ATK."},
+  {id:"BS-NOR-009", name:"Rush Attack", target:"1 Enemy", desc:"Charges forward, dealing 110% Physical ATK and granting Taunt to self for 1 turn."},
+  {id:"BS-NOR-010", name:"Vigor Strike", target:"1 Enemy", desc:"Deals 100% Physical ATK and restores user's HP by 20% of the damage dealt."},
+  {id:"BS-FIR-011", name:"Ember", target:"1 Enemy", desc:"Launches a small spark, dealing 90% Fire Magic ATK with a 35% chance to inflict Burn (3 turns)."},
+  {id:"BS-FIR-012", name:"Flame Claw", target:"1 Enemy", desc:"A claw enveloped in flames, dealing 110% Fire Physical ATK and inflicting Burn (2 turns)."},
+  {id:"BS-FIR-013", name:"Spark Shot", target:"1 Enemy", desc:"Fires a fast fire projectile, dealing 100% Magic ATK. Increases user's ATK by 10% for 1 turn if target is Burned."},
+  {id:"BS-FIR-014", name:"Heat Wave", target:"All Enemies", desc:"Exhales scorching heat, dealing 55% Fire Magic ATK to all enemies."},
+  {id:"BS-FIR-015", name:"Magma Punch", target:"1 Enemy", desc:"Magma-infused punch, dealing 120% Physical ATK with a 20% chance to reduce target's Defense."},
+  {id:"BS-WAT-016", name:"Water Splash", target:"1 Enemy", desc:"Sprays pressurized water, dealing 90% Water Magic ATK with a 30% chance to reduce target's Speed for 2 turns."},
+  {id:"BS-WAT-017", name:"Aqua Blade", target:"1 Enemy", desc:"Sharp water blade, dealing 110% Physical/Magic ATK (takes highest value)."},
+  {id:"BS-WAT-018", name:"Chill Dart", target:"1 Enemy", desc:"High-speed tiny ice shard, dealing 95% Magic ATK with a 25% chance to inflict Freeze (1 turn)."},
+  {id:"BS-WAT-019", name:"Healing Droplet", target:"1 Ally", desc:"Restores an ally's HP by 15% of target's Max HP using pure water energy."},
+  {id:"BS-WAT-020", name:"Tidal Tap", target:"All Enemies", desc:"Small water wave, dealing 50% Magic ATK and inflicting Wet status on all enemies for 1 turn."},
+  {id:"BS-WND-021", name:"Wind Cutter", target:"1 Enemy", desc:"Sharp wind slash, dealing 100% Wind Magic ATK with high accuracy."},
+  {id:"BS-WND-022", name:"Gale Dash", target:"1 Enemy", desc:"Strikes with wind speed, dealing 90% Physical ATK and increasing user's Speed by 10% for 1 turn."},
+  {id:"BS-WND-023", name:"Gust", target:"All Enemies", desc:"Strong gust of wind, dealing 50% Magic ATK with a 15% chance to interrupt target's action."},
+  {id:"BS-WND-024", name:"Feather Dart", target:"1 Enemy", desc:"Windy feather throw, dealing 105% Physical ATK and ignoring 5% of target's Evasion."},
+  {id:"BS-WND-025", name:"Zephyr Touch", target:"1 Ally", desc:"Grants +10% Evasion buff to 1 ally for 2 turns."},
+  {id:"BS-EAR-026", name:"Stone Pebble", target:"1 Enemy", desc:"Throws a hard stone, dealing 95% Earth Physical ATK."},
+  {id:"BS-EAR-027", name:"Mud Slap", target:"1 Enemy", desc:"Mud throw, dealing 80% Physical ATK and reducing target's accuracy by 10% for 2 turns."},
+  {id:"BS-EAR-028", name:"Hardening", target:"Self", desc:"Hardens skin/armor with earth elements, increasing user's Defense by 20% for 2 turns."},
+  {id:"BS-EAR-029", name:"Ground Spike", target:"1 Enemy", desc:"Summons earth spikes from beneath target's feet, dealing 110% Physical ATK."},
+  {id:"BS-EAR-030", name:"Tremor", target:"All Enemies", desc:"Stamps the ground, dealing 45% Physical ATK to all enemies with a small chance to slow Speed."},
+  {id:"BS-LGT-031", name:"Flash", target:"1 Enemy", desc:"Blinding light flash, dealing 85% Light Magic ATK and reducing target's accuracy by 15% for 1 turn."},
+  {id:"BS-LGT-032", name:"Holy Ray", target:"1 Enemy", desc:"Fires a thin holy beam, dealing 100% Magic ATK. Grants 25% bonus damage if target is Dark element."},
+  {id:"BS-LGT-033", name:"Luminescent Touch", target:"1 Ally", desc:"Heals 12% Max HP of an ally and removes 1 minor debuff."},
+  {id:"BS-LGT-034", name:"Sun Spark", target:"1 Enemy", desc:"Light-energized punch, dealing 105% Physical ATK."},
+  {id:"BS-LGT-035", name:"Blessing Glow", target:"All Allies", desc:"Provides small gradual HP recovery (Regen) of 5% per turn for 2 turns to the entire team."},
+  {id:"BS-DRK-036", name:"Shadow Strike", target:"1 Enemy", desc:"Strike from the shadows, dealing 100% Dark Physical ATK."},
+  {id:"BS-DRK-037", name:"Dark Needle", target:"1 Enemy", desc:"Dark energy needle, dealing 90% Magic ATK with a 30% chance to inflict Poison or Blind."},
+  {id:"BS-DRK-038", name:"Life Drain", target:"1 Enemy", desc:"Absorbs target's dark essence, dealing 85% Magic ATK and restoring user's HP by 50% of the damage dealt."},
+  {id:"BS-DRK-039", name:"Gloom", target:"1 Enemy", desc:"Sends a gloomy aura, reducing target's Magic ATK by 15% for 2 turns."},
+  {id:"BS-DRK-040", name:"Night Shade", target:"All Enemies", desc:"Spreads dark fog, dealing 45% Magic ATK to all enemies with a 20% chance to inflict Silence."},
+  {id:"BS-COM-041", name:"Plasma Spark (Lightning/Light)", target:"1 Enemy", desc:"Deals 105% Magic ATK with a 40% chance to paralyze the target."},
+  {id:"BS-COM-042", name:"Venom Bite (Normal/Dark)", target:"1 Enemy", desc:"Venomous bite, dealing 90% Physical ATK and inflicting Poison (3 turns)."},
+  {id:"BS-COM-043", name:"Steam Blast (Fire/Water)", target:"1 Enemy", desc:"Hot steam burst, dealing 110% Magic ATK that ignores 15% of target's Resistance."},
+  {id:"BS-COM-044", name:"Quicksand Stab (Earth/Water)", target:"1 Enemy", desc:"Deals 100% Physical ATK and lowers target's Speed by 20% for 2 turns."},
+  {id:"BS-COM-045", name:"Frostbite Claw (Water/Wind)", target:"1 Enemy", desc:"Cold ice claw, dealing 105% Physical ATK with a 30% chance to freeze target body parts."},
+  {id:"BS-COM-046", name:"Meteor Fragment (Fire/Earth)", target:"1 Enemy", desc:"Small meteor fragment, dealing 125% Physical ATK (1 turn cooldown)."},
+  {id:"BS-COM-047", name:"Eclipse Slash (Light/Dark)", target:"1 Enemy", desc:"Two-sided slash of light and darkness, dealing 115% Adaptive Damage."},
+  {id:"BS-COM-048", name:"Sonic Boom (Wind/Normal)", target:"1 Enemy", desc:"High-speed sound wave, dealing 100% Magic ATK and piercing through target's shields/protective skills."},
+  {id:"BS-COM-049", name:"Magma Shield (Fire/Earth)", target:"Self", desc:"Covers self in magma, increasing Defense by 15% and granting Retaliation effect for 2 turns."},
+  {id:"BS-COM-050", name:"Astral Ray (Light/Wind)", target:"1 Enemy", desc:"Pure astral beam, dealing 110% Magic ATK with +15% base Critical Rate."}
+];
+
+const dbUltimateSkills = [
+  {id:"ULT-NOR-001", name:"Godspeed Blade", cost:"100% UG", target:"1 Enemy", desc:"Absolute speed ultimate slash attack, dealing 350% Physical ATK and ignoring all target Defense."},
+  {id:"ULT-NOR-002", name:"Final Impact", cost:"100% UG", target:"All Enemies", desc:"Massive ground blow that shatters the arena, dealing 220% Physical ATK to all enemies and stunning them for 1 turn."},
+  {id:"ULT-NOR-003", name:"Limit Breaker Barrage", cost:"100% UG", target:"1 Enemy", desc:"Endless combo attack rain of 8-10 hits, dealing a total of 380% Physical ATK."},
+  {id:"ULT-NOR-004", name:"Vanguard Fortress", cost:"100% UG", target:"All Allies", desc:"Creates an absolute protective shield, granting a Shield equal to 50% Max HP of the whole team and increasing Defense by 40% for 2 turns."},
+  {id:"ULT-FIR-005", name:"Supernova Eruption", cost:"100% UG", target:"All Enemies", desc:"Summons a giant fireball resembling a stellar meteorite, dealing 280% Fire Magic ATK and guaranteed severe Burn (3 turns) to all enemies."},
+  {id:"ULT-FIR-006", name:"Hellfire Annihilation", cost:"100% UG", target:"1 Enemy", desc:"Burns target in pure hellfire, dealing 400% Magic ATK. Damage increases by 50% if target is already Burned."},
+  {id:"ULT-FIR-007", name:"Phoenix Rebirth Flame", cost:"100% UG", target:"Self / Team", desc:"Restores 60% Max HP of user and grants automatic Revive status (revives once with 30% HP if fallen)."},
+  {id:"ULT-WAT-008", name:"Tsunami Wrath", cost:"100% UG", target:"All Enemies", desc:"Summons a giant tidal wave, dealing 260% Water Magic ATK and reducing all enemies' Speed by 30% for 2 turns."},
+  {id:"ULT-WAT-009", name:"Absolute Zero Prison", cost:"100% UG", target:"1 Enemy", desc:"Totally freezes target in eternal ice, dealing 340% Magic ATK and freezing them for 2 full turns."},
+  {id:"ULT-WAT-010", name:"Ocean's Blessing", cost:"100% UG", target:"All Allies", desc:"Restores 70% Max HP of all team members and cleanses all active debuffs."},
+  {id:"ULT-WND-011", name:"Tempest Typhoon", cost:"100% UG", target:"All Enemies", desc:"Great typhoon storm tearing enemies apart, dealing 270% Wind Magic ATK and resetting skill cooldowns for all teammates."},
+  {id:"ULT-WND-012", name:"Divine Gale Strike", cost:"100% UG", target:"1 Enemy", desc:"Light-speed wind slash, dealing 370% Physical ATK and granting 50% Evasion buff to user for the next turn."},
+  {id:"ULT-WND-013", name:"Sky Dancer's Domain", cost:"100% UG", target:"All Allies", desc:"Increases Speed and Critical Rate of the entire team by 30% for 3 turns."},
+  {id:"ULT-EAR-014", name:"Gaia Cataclysm", cost:"100% UG", target:"All Enemies", desc:"Colossal earthquake splitting the battlefield, dealing 290% Earth Physical ATK and reducing all enemies' Defense by 35% for 2 turns."},
+  {id:"ULT-EAR-015", name:"Titanium Bastion", cost:"100% UG", target:"Self", desc:"Transforms body into pure metal, reducing incoming damage by 70% for 2 turns and reflecting 40% of damage back to attacker."},
+  {id:"ULT-EAR-016", name:"Continental Crush", cost:"100% UG", target:"1 Enemy", desc:"Drops a giant stone pillar from the sky, dealing 410% Physical ATK (massive bonus damage against large targets)."},
+  {id:"ULT-LGT-017", name:"Judgement of Heaven", cost:"100% UG", target:"All Enemies", desc:"Drops holy light pillars from heaven, dealing 300% Light Magic ATK and removing all active buffs from enemies."},
+  {id:"ULT-LGT-018", name:"Sanctuary of Light", cost:"100% UG", target:"All Allies", desc:"Creates a holy dome, restoring 50% team HP and granting immunity to all status ailments for 2 turns."},
+  {id:"ULT-LGT-019", name:"Solar Flare Execution", cost:"100% UG", target:"1 Enemy", desc:"Concentrated sunlight explosion, dealing 420% pure Magic ATK."},
+  {id:"ULT-DRK-020", name:"Abyss Devourer", cost:"100% UG", target:"All Enemies", desc:"Opens dark abyss gates, dealing 280% Dark Magic ATK and absorbing 50% of total damage dealt as HP to heal the team."},
+  {id:"ULT-DRK-021", name:"Soul Reaper Scythe", cost:"100% UG", target:"1 Enemy", desc:"Death scythe slash from a dark angel, dealing 430% Magic ATK. If target HP is below 25%, automatically triggers Instant Kill."},
+  {id:"ULT-DRK-022", name:"Eternal Eclipse", cost:"100% UG", target:"All Enemies", desc:"Wraps the battlefield in total darkness, inflicting Blind, Silence, and Poison simultaneously on all enemies for 2 turns."},
+  {id:"ULT-COM-023", name:"Plasma Lightning Storm (Light/Wind)", cost:"100% UG", target:"All Enemies", desc:"High-speed mass lightning strike, dealing 310% Magic ATK and inflicting Paralysis on all enemies for 1 turn."},
+  {id:"ULT-COM-024", name:"Volcanic Cataclysm (Fire/Earth)", cost:"100% UG", target:"All Enemies", desc:"Total volcanic eruption, dealing 320% Fire and Earth mixed Magic ATK with sequential Burn effects."},
+  {id:"ULT-COM-025", name:"Glacial Blizzard (Water/Wind)", cost:"100% UG", target:"All Enemies", desc:"Eternal ice snowstorm, dealing 290% Magic ATK and lowering all enemies' Speed and Defense by 25%."},
+  {id:"ULT-COM-026", name:"Dark Matter Singularity (Dark/Light)", cost:"100% UG", target:"1 Enemy", desc:"Creates an exploding dark matter orb, dealing 450% Adaptive Damage that ignores target's magical defense."},
+  {id:"ULT-COM-027", name:"Dragonic Rage (Fire/Normal)", cost:"100% UG", target:"1 Enemy", desc:"Rampages with ancient dragon power, dealing 400% Physical ATK and increasing user's ATK by 50% for the next 2 turns."},
+  {id:"ULT-COM-028", name:"Sacred Genesis (Light/Water)", cost:"100% UG", target:"All Allies & Enemies", desc:"Cleanses the battlefield: Restores 100% HP of the whole team and removes all debuffs, while dealing 200% holy Magic Damage to all enemies."},
+  {id:"ULT-COM-029", name:"Shadow Viper Strike (Dark/Earth)", cost:"100% UG", target:"1 Enemy", desc:"Deadly shadow poison attack, dealing 380% Physical ATK and inflicting Deadly Poison (massive Max HP-based damage for 3 turns)."},
+  {id:"ULT-COM-030", name:"Astral Symphony (Wind/Light)", cost:"100% UG", target:"All Allies", desc:"Sings an astral melody granting massive buffs: Increases team ATK, Magic ATK, Defense, and Speed by 25% for 3 turns."}
+];
+
+const dbTraits = [
+  {id:"TRT-NOR-001", name:"Sturdy Build", desc:"Reduces all incoming physical damage by 10%."},
+  {id:"TRT-NOR-002", name:"Momentum", desc:"Increases ATK by 5% each time a successful attack hits an enemy (stacks up to 5 times)."},
+  {id:"TRT-NOR-003", name:"Adaptable", desc:"Immune to status debuffs and stat reduction effects from enemies."},
+  {id:"TRT-NOR-004", name:"Berserk Will", desc:"When HP falls below 30%, Critical Rate increases by 25%."},
+  {id:"TRT-FIR-005", name:"Blaze Body", desc:"Has a 30% chance to inflict Burn on enemies attacking the user with melee attacks."},
+  {id:"TRT-FIR-006", name:"Pyromania", desc:"Increases Magic ATK by 20% while target enemies are affected by Burn."},
+  {id:"TRT-FIR-007", name:"Solar Fuel", desc:"Restores 5% Max HP whenever the user successfully triggers Burn on an enemy."},
+  {id:"TRT-WAT-008", name:"Water Veil", desc:"Reduces incoming Fire element damage by 40%."},
+  {id:"TRT-WAT-009", name:"Fluid Grace", desc:"Increases Evasion by 15% when HP is above 70%."},
+  {id:"TRT-WAT-010", name:"Regeneration Source", desc:"Restores 4% Max HP at the start of every turn."},
+  {id:"TRT-WND-011", name:"Gale Reflex", desc:"Increases base Speed by 15%."},
+  {id:"TRT-WND-012", name:"Wind Rider", desc:"Has a 20% chance to completely dodge projectile/ranged enemy attacks."},
+  {id:"TRT-WND-013", name:"Swift Action", desc:"On the first turn of battle, the character immediately gains an additional 50% Action Gauge."},
+  {id:"TRT-EAR-014", name:"Solid Ground", desc:"Immune to Knockback, Stun, or position push effects from enemies."},
+  {id:"TRT-EAR-015", name:"Stone Skin", desc:"Reduces all incoming damage by 15%, but decreases character's Speed by 10%."},
+  {id:"TRT-EAR-016", name:"Earth Resonance", desc:"Gains a Shield equal to 10% Max HP at the start of battle."},
+  {id:"TRT-LGT-017", name:"Inner Light", desc:"Increases healing effectiveness given to allies by 25%."},
+  {id:"TRT-LGT-018", name:"Aura of Purity", desc:"Reduces the duration of all negative debuffs received by 1 turn."},
+  {id:"TRT-LGT-019", name:"Luminescent Grace", desc:"Increases Magic Resistance by 20% against Dark element attacks."},
+  {id:"TRT-DRK-020", name:"Shadow Cloak", desc:"Increases Evasion by 15% during nighttime or in dark environments within game lore."},
+  {id:"TRT-DRK-021", name:"Vampire Touch", desc:"Absorbs 10% of all damage dealt to restore user's HP (passive Life Steal)."},
+  {id:"TRT-DRK-022", name:"Death Toll", desc:"Each time an enemy falls, user's ATK increases by 15% until the end of battle."},
+  {id:"TRT-COM-023", name:"Overcharge (Lightning/Light)", desc:"Increases Ultimate Gauge (UG) acquisition by 25% faster than normal actions."},
+  {id:"TRT-COM-024", name:"Magma Heart (Fire/Earth)", desc:"Immune to Burn and Freeze effects, and grants an additional 15% Physical ATK."},
+  {id:"TRT-COM-025", name:"Tempest Soul (Wind/Water)", desc:"Each time an attack is successfully evaded, user's Speed increases by 10% for 2 turns."},
+  {id:"TRT-COM-026", name:"Eclipse Balance (Light/Dark)", desc:"If HP is above 50%, increases Magic ATK by 20%; if HP is below 50%, increases Defense by 20%."},
+  {id:"TRT-COM-027", name:"Berserker's Blood (Normal/Fire)", desc:"Losing every 10% HP increases Critical Damage by 8%."},
+  {id:"TRT-COM-028", name:"Mystic Conduit (Light/Wind)", desc:"Reduces SP/Mana usage for all types of skills by 15%."},
+  {id:"TRT-COM-029", name:"Iron Wall (Earth/Normal)", desc:"Backline team members receive 5% damage reduction thanks to this character's presence on the front line."},
+  {id:"TRT-COM-030", name:"Apex Predator (Universal/Combination)", desc:"Deals an additional 15% damage against enemies with HP below 40%."}
+];
+
+const dbEnemies = [
+  {id:"PWN-CULT-001", name:"Cult Novice", type:"Pawn", element:"Dark", stats:"HP: 320 | ATK: 45 | DEF: 20 | SPD: 50", desc:"Skill 1: Dark Whisper (95% Dark Magic, 15% Silence). Skill 2: Fanaticism (+10% ATK when ally falls)."},
+  {id:"PWN-CULT-002", name:"Cult Zealot", type:"Pawn", element:"Dark / Normal", stats:"HP: 400 | ATK: 55 | DEF: 25 | SPD: 55", desc:"Skill 1: Rusted Dagger (100% Phys, 20% Poison). Skill 2: Blood Pact (Sacrifice 5% HP for +15% ATK)."},
+  {id:"PWN-CULT-003", name:"Corrupted Imperial Guard", type:"Pawn", element:"Normal", stats:"HP: 550 | ATK: 50 | DEF: 45 | SPD: 40", desc:"Skill 1: Broken Spear (90% Phys, -5% DEF). Skill 2: Stubborn Shell (10% Phys damage reduction)."},
+  {id:"PWN-CULT-004", name:"Cult Ritualist", type:"Pawn", element:"Dark / Fire", stats:"HP: 350 | ATK: 65 | DEF: 15 | SPD: 60", desc:"Skill 1: Cursed Ember (100% Magic, 30% Burn). Skill 2: Dark Channel (Regen 5% SP/turn)."},
+  {id:"PWN-CULT-005", name:"Shadow Infiltrator", type:"Pawn", element:"Dark / Wind", stats:"HP: 300 | ATK: 60 | DEF: 18 | SPD: 75", desc:"Skill 1: Shadow Slash (110% Phys, high crit). Skill 2: Evasion Stance (+15% Evasion turn 1)."},
+  {id:"PWN-CULT-006", name:"Cult Acolyte", type:"Pawn", element:"Light / Dark", stats:"HP: 380 | ATK: 40 | DEF: 30 | SPD: 45", desc:"Skill 1: Unholy Prayer (Heals ally pawn 10% HP). Skill 2: Shared Suffering (Redirects 5% ally damage)."},
+  {id:"PWN-CULT-007", name:"Fanatical Axeman", type:"Pawn", element:"Fire", stats:"HP: 480 | ATK: 70 | DEF: 22 | SPD: 45", desc:"Skill 1: Wild Swing (120% Phys, -10% DEF). Skill 2: Burning Rage (+10% ATK when hit by Fire/Normal)."},
+  {id:"PWN-CULT-008", name:"Corrupted Mage", type:"Pawn", element:"Dark", stats:"HP: 310 | ATK: 75 | DEF: 15 | SPD: 55", desc:"Skill 1: Void Bolt (105% Magic, ignore 10% MR). Skill 2: Mana Feedback (10% recoil to magic attackers)."},
+  {id:"PWN-CULT-009", name:"Cult Crossbowman", type:"Pawn", element:"Wind", stats:"HP: 340 | ATK: 65 | DEF: 20 | SPD: 65", desc:"Skill 1: Tainted Bolt (100% Phys, -5% SPD). Skill 2: High Ground (+10% Accuracy/Crit)."},
+  {id:"PWN-CULT-010", name:"Guard Captain of Ruin", type:"Pawn", element:"Normal", stats:"HP: 650 | ATK: 60 | DEF: 50 | SPD: 35", desc:"Skill 1: Commanding Strike (100% Phys, +5% ally ATK). Skill 2: Unyielding (Immune to Stun/Knockback)."},
+  {id:"PWN-WLD-011", name:"Plagued Wolf", type:"Pawn", element:"Normal / Dark", stats:"HP: 350 | ATK: 60 | DEF: 20 | SPD: 70", desc:"Skill 1: Rabid Bite (95% Phys, 30% Poison). Skill 2: Pack Hunt (+10% damage if beast pawn active)."},
+  {id:"PWN-WLD-012", name:"Void Crow", type:"Pawn", element:"Wind / Dark", stats:"HP: 250 | ATK: 55 | DEF: 15 | SPD: 85", desc:"Skill 1: Peck (90% Phys, bypasses 5% Evasion). Skill 2: Shadow Feathers (+20% Evasion vs ranged)."},
+  {id:"PWN-WLD-013", name:"Corrupted Boar", type:"Pawn", element:"Earth / Normal", stats:"HP: 500 | ATK: 65 | DEF: 35 | SPD: 40", desc:"Skill 1: Tusk Charge (110% Phys, pushes turn order). Skill 2: Thick Hide (15% Phys damage reduction)."},
+  {id:"PWN-WLD-014", name:"Ash Serpent", type:"Pawn", element:"Fire / Earth", stats:"HP: 320 | ATK: 70 | DEF: 18 | SPD: 60", desc:"Skill 1: Magma Spit (100% Magic, 25% Burn). Skill 2: Heat Scales (5% Burn damage back to melee)."},
+  {id:"PWN-WLD-015", name:"Frost-Bitten Stalker", type:"Pawn", element:"Water / Dark", stats:"HP: 370 | ATK: 62 | DEF: 22 | SPD: 68", desc:"Skill 1: Frost Jaw (100% Phys, 20% Freeze). Skill 2: Glacial Camouflage (+20% DEF on ruined floors)."},
+  {id:"PWN-TWR-016", name:"Shambling Husk", type:"Pawn", element:"Normal / Dark", stats:"HP: 600 | ATK: 45 | DEF: 30 | SPD: 25", desc:"Skill 1: Claw Swipe (85% Phys). Skill 2: Decaying Body (Deals 10% Max HP damage on death)."},
+  {id:"PWN-TWR-017", name:"Aberrant Slime", type:"Pawn", element:"Water", stats:"HP: 450 | ATK: 40 | DEF: 40 | SPD: 30", desc:"Skill 1: Acidic Touch (80% Magic, -10% DEF). Skill 2: Elastic Form (50% reduced blunt damage)."},
+  {id:"PWN-TWR-018", name:"Void Wisps", type:"Pawn", element:"Dark / Light", stats:"HP: 220 | ATK: 70 | DEF: 10 | SPD: 90", desc:"Skill 1: Energy Drain (90% Magic, steal 5 SP). Skill 2: Ethereal (Immune to normal physical attacks)."},
+  {id:"PWN-TWR-019", name:"Hollow Specter", type:"Pawn", element:"Dark", stats:"HP: 280 | ATK: 68 | DEF: 15 | SPD: 70", desc:"Skill 1: Wailing Scream (95% Magic, 15% Fear/Silence). Skill 2: Phase Out (15% dodge chance)."},
+  {id:"PWN-TWR-020", name:"Ruined Automaton", type:"Pawn", element:"Earth / Normal", stats:"HP: 550 | ATK: 55 | DEF: 60 | SPD: 20", desc:"Skill 1: Iron Punch (100% Phys). Skill 2: Rusted Core (Explodes on death for 20% damage)."},
+  {id:"PWN-ELV-021", name:"Corrupted Elf Ranger", type:"Pawn", element:"Wind / Dark", stats:"HP: 330 | ATK: 72 | DEF: 18 | SPD: 80", desc:"Skill 1: Tainted Arrow (105% Phys, 20% Poison). Skill 2: Keen Sight (Ignore 15% Evasion)."},
+  {id:"PWN-ELV-022", name:"Wilted Dryad", type:"Pawn", element:"Earth / Dark", stats:"HP: 400 | ATK: 50 | DEF: 30 | SPD: 45", desc:"Skill 1: Root Whip (95% Magic, -10% SPD). Skill 2: Rooted Life (Heals 3% HP on corrupted ground)."},
+  {id:"PWN-DWF-023", name:"Derelict Dwarf Miner", type:"Pawn", element:"Earth / Fire", stats:"HP: 520 | ATK: 65 | DEF: 40 | SPD: 35", desc:"Skill 1: Pickaxe Smash (110% Phys vs armor). Skill 2: Stubborn Miner (+50% Stun resistance)."},
+  {id:"PWN-DWF-024", name:"Corrupted Runesmith", type:"Pawn", element:"Fire / Dark", stats:"HP: 420 | ATK: 68 | DEF: 32 | SPD: 40", desc:"Skill 1: Dark Rune Blast (105% Magic). Skill 2: Runic Armor (Shield = 5% Max HP every 2 turns)."},
+  {id:"PWN-BST-025", name:"Feral Wolfkin", type:"Pawn", element:"Normal", stats:"HP: 380 | ATK: 68 | DEF: 22 | SPD: 75", desc:"Skill 1: Claw Slash (105% Phys). Skill 2: Bloodlust (+5% ATK per 10% missing HP)."},
+  {id:"PWN-BST-026", name:"Corrupted Fox Shaman", type:"Pawn", element:"Fire / Dark", stats:"HP: 310 | ATK: 75 | DEF: 18 | SPD: 65", desc:"Skill 1: Foxfire (100% Magic, 25% Burn). Skill 2: Cursed Aura (-5% enemy elemental resistance)."},
+  {id:"PWN-DRK-027", name:"Defiled Dragonkin Whelp", type:"Pawn", element:"Fire / Dark", stats:"HP: 480 | ATK: 70 | DEF: 35 | SPD: 50", desc:"Skill 1: Dark Flame (110% Magic). Skill 2: Scales of Ruin (10% Magic damage reduction)."},
+  {id:"PWN-MER-028", name:"Drowned Merfolk", type:"Pawn", element:"Water / Dark", stats:"HP: 390 | ATK: 58 | DEF: 25 | SPD: 55", desc:"Skill 1: Tidal Spear (100% Phys). Skill 2: Abyssal Weight (-5% attacker SPD when hit)."},
+  {id:"PWN-DEM-029", name:"Lost Lesser Demon", type:"Pawn", element:"Dark / Fire", stats:"HP: 440 | ATK: 72 | DEF: 25 | SPD: 60", desc:"Skill 1: Hellfire Spark (105% Magic). Skill 2: Demon Blood (Heals 2% HP when dealing damage)."},
+  {id:"PWN-GNO-030", name:"Corrupted Gnome Tinkerer", type:"Pawn", element:"Earth / Normal", stats:"HP: 300 | ATK: 60 | DEF: 28 | SPD: 70", desc:"Skill 1: Explosive Dart (100% Phys, 10% splash). Skill 2: Jury-Rigged (Explodes upon death)."},
+  {id:"PWN-TWR-031", name:"Tower Sentinel Mk I", type:"Pawn", element:"Earth", stats:"HP: 500 | ATK: 55 | DEF: 45 | SPD: 30", desc:"Skill: Slam (100% Phys). Passive: Fortified."},
+  {id:"PWN-TWR-032", name:"Corrupted Knight Errant", type:"Pawn", element:"Normal", stats:"HP: 480 | ATK: 65 | DEF: 38 | SPD: 50", desc:"Skill: Dash Strike (105% Phys). Passive: Honorless."},
+  {id:"PWN-TWR-033", name:"Void Stalker", type:"Pawn", element:"Dark", stats:"HP: 320 | ATK: 75 | DEF: 15 | SPD: 82", desc:"Skill: Ambush (120% Phys). Passive: Stealth."},
+  {id:"PWN-TWR-034", name:"Flesh Construct", type:"Pawn", element:"Normal / Dark", stats:"HP: 700 | ATK: 60 | DEF: 25 | SPD: 20", desc:"Skill: Heavy Bash (110% Phys). Passive: Regeneration."},
+  {id:"PWN-TWR-035", name:"Cursed Arcanist", type:"Pawn", element:"Dark", stats:"HP: 310 | ATK: 80 | DEF: 12 | SPD: 60", desc:"Skill: Dark Ray (115% Magic). Passive: Glass Cannon."},
+  {id:"PWN-TWR-036", name:"Corrupted Priest of Light", type:"Pawn", element:"Light / Dark", stats:"HP: 400 | ATK: 50 | DEF: 35 | SPD: 45", desc:"Skill: False Blessing (Heal/Buff). Passive: Twisted Faith."},
+  {id:"PWN-TWR-037", name:"Mire Crawler", type:"Pawn", element:"Water / Earth", stats:"HP: 450 | ATK: 55 | DEF: 35 | SPD: 40", desc:"Skill: Mud Trap (Slow target). Passive: Slippery."},
+  {id:"PWN-TWR-038", name:"Ash Ghoul", type:"Pawn", element:"Fire / Dark", stats:"HP: 360 | ATK: 68 | DEF: 20 | SPD: 65", desc:"Skill: Scorching Claws (Burn). Passive: Ashen Residue."},
+  {id:"PWN-TWR-039", name:"Galesoul Phantom", type:"Pawn", element:"Wind", stats:"HP: 290 | ATK: 70 | DEF: 10 | SPD: 88", desc:"Skill: Wind Cutter (Magic). Passive: Aero Form."},
+  {id:"PWN-TWR-040", name:"Ironclad Thrall", type:"Pawn", element:"Earth", stats:"HP: 600 | ATK: 50 | DEF: 55 | SPD: 25", desc:"Skill: Shield Bash (Phys). Passive: Heavy Weight."},
+  {id:"PWN-TWR-041", name:"Blood Cultist", type:"Pawn", element:"Dark", stats:"HP: 340 | ATK: 72 | DEF: 18 | SPD: 58", desc:"Skill: Blood Drain (Life steal). Passive: Sanguine."},
+  {id:"PWN-TWR-042", name:"Blighted Beast", type:"Pawn", element:"Normal / Dark", stats:"HP: 520 | ATK: 66 | DEF: 30 | SPD: 50", desc:"Skill: Wild Bite (Poison). Passive: Blighted Hide."},
+  {id:"PWN-TWR-043", name:"Soul Leech", type:"Pawn", element:"Dark", stats:"HP: 270 | ATK: 65 | DEF: 15 | SPD: 78", desc:"Skill: Soul Drain (SP Drain). Passive: Ethereal Body."},
+  {id:"PWN-TWR-044", name:"Pyre Zombie", type:"Pawn", element:"Fire / Dark", stats:"HP: 480 | ATK: 60 | DEF: 25 | SPD: 30", desc:"Skill: Spontaneous Combustion (AOE Fire). Passive: Explosive Corpse."},
+  {id:"PWN-TWR-045", name:"Void Hound", type:"Pawn", element:"Dark", stats:"HP: 350 | ATK: 70 | DEF: 20 | SPD: 75", desc:"Skill: Shadow Bite (Dark Phys). Passive: Dark Stride."},
+  {id:"PWN-TWR-046", name:"Cursed Archer", type:"Pawn", element:"Normal / Dark", stats:"HP: 320 | ATK: 68 | DEF: 18 | SPD: 70", desc:"Skill: Piercing Arrow (Ignore DEF). Passive: Sniper."},
+  {id:"PWN-TWR-047", name:"Tower Drone Beta", type:"Pawn", element:"Earth", stats:"HP: 400 | ATK: 55 | DEF: 40 | SPD: 50", desc:"Skill: Laser Shot (Magic). Passive: Automated System."},
+  {id:"PWN-TWR-048", name:"Twisted Hermit", type:"Pawn", element:"Dark", stats:"HP: 380 | ATK: 62 | DEF: 30 | SPD: 40", desc:"Skill: Dark Hex (Debuff). Passive: Madness."},
+  {id:"PWN-TWR-049", name:"Corrupted Centurion", type:"Pawn", element:"Normal", stats:"HP: 580 | ATK: 65 | DEF: 45 | SPD: 35", desc:"Skill: Slash Combo (2-hit Phys). Passive: Discipline."},
+  {id:"PWN-TWR-050", name:"Nythar’s Shardling", type:"Pawn", element:"Dark", stats:"HP: 450 | ATK: 75 | DEF: 30 | SPD: 60", desc:"Skill: Shard Burst (Dark AOE). Passive: Void Resonance."},
+  {id:"MB-001", name:"High Priest Malakor (Echo of the Fall)", type:"Mind Boss", element:"Dark / Light", stats:"HP: 3,500 | ATK: 110 | DEF: 60 | SPD: 70", desc:"Phase 1: Darkness Prayer, Holy Illusion. Phase 2 (50% HP): Eclipse Ritual, Fanatic's Zeal."},
+  {id:"MB-002", name:"General Valerius (The Broken Knight)", type:"Mind Boss", element:"Normal / Fire", stats:"HP: 4,200 | ATK: 130 | DEF: 80 | SPD: 50", desc:"Phase 1: Imperial Slash, Defensive Wall. Phase 2: Last Stand of Valeria, Wrath of the Fallen."},
+  {id:"MB-003", name:"Archmage Vespera (Corrupted Wisdom)", type:"Mind Boss", element:"Dark / Water", stats:"HP: 3,200 | ATK: 145 | DEF: 45 | SPD: 85", desc:"Phase 1: Abyssal Torrent, Mind Rot. Phase 2: Singularity Nova, Aether Shield."},
+  {id:"MB-004", name:"Queen Titania (Wilted Sovereignty)", type:"Mind Boss", element:"Earth / Wind", stats:"HP: 3,800 | ATK: 120 | DEF: 65 | SPD: 75", desc:"Phase 1: Thorn Whip, Forest’s Lament. Phase 2: Wilted Domain, Nature's Retribution."},
+  {id:"MB-005", name:"Thane Ironbeard (Karak-Dur’s Ghost)", type:"Mind Boss", element:"Earth / Fire", stats:"HP: 4,500 | ATK: 125 | DEF: 90 | SPD: 40", desc:"Phase 1: Magma Hammer, Forge Guard. Phase 2: Mountain Splitter, Magma Core."},
+  {id:"MB-006", name:"Grandmaster Kenji (Shadow of the Blade)", type:"Mind Boss", element:"Wind / Normal", stats:"HP: 3,400 | ATK: 150 | DEF: 50 | SPD: 95", desc:"Phase 1: Swift Execution, Phantom Step. Phase 2: Thousand Cuts, Mindless Focus."},
+  {id:"MB-007", name:"Patriarch Varis (Beast Clan’s Curse)", type:"Mind Boss", element:"Fire / Normal", stats:"HP: 4,000 | ATK: 135 | DEF: 60 | SPD: 70", desc:"Phase 1: Beast Claw, Blood Roar. Phase 2: Primal Berserk, Devouring Maw."},
+  {id:"MB-008", name:"High Priestess Selena (Sunken Faith)", type:"Mind Boss", element:"Water / Light", stats:"HP: 3,600 | ATK: 125 | DEF: 70 | SPD: 60", desc:"Phase 1: Tidal Ray, Aegis of Atlantis. Phase 2: Abyssal Tsunami, Deep Restoration."},
+  {id:"MB-009", name:"Lord Ignis (Draconis Traitor)", type:"Mind Boss", element:"Fire / Dark", stats:"HP: 4,600 | ATK: 140 | DEF: 75 | SPD: 65", desc:"Phase 1: Dragon Breath, Scales of Defiance. Phase 2: Hellfire Cataclysm, Dragonic Rage."},
+  {id:"MB-010", name:"The Remnant Master (Echo of the Past)", type:"Mind Boss", element:"Dark / Normal", stats:"HP: 5,000 | ATK: 130 | DEF: 70 | SPD: 80", desc:"Phase 1: Mirror Strike, Memory Drain. Phase 2: Identity Erased, System Overload."},
+  {id:"FB-010", name:"Guardian of the Lower Gate (Floor 10)", type:"Floor Boss", element:"Earth / Normal", stats:"HP: 8,000 | ATK: 150 | DEF: 100 | SPD: 50", desc:"3 Phases: Stone Slam, Earthquake, Continental Crush & Unbreakable Will."},
+  {id:"FB-020", name:"Pyre Lord Ignisvar (Floor 20)", type:"Floor Boss", element:"Fire", stats:"HP: 11,000 | ATK: 180 | DEF: 70 | SPD: 75", desc:"3 Phases: Flame Wave, Magma Eruption, Supernova Blast."},
+  {id:"FB-030", name:"Leviathan of the Sunken Depths (Floor 30)", type:"Floor Boss", element:"Water / Dark", stats:"HP: 15,000 | ATK: 170 | DEF: 90 | SPD: 60", desc:"3 Phases: Abyssal Bite, Drowning Depths, Wrath of the Deep Sea."},
+  {id:"FB-040", name:"Gale Sovereign Zephyros (Floor 40)", type:"Floor Boss", element:"Wind", stats:"HP: 18,000 | ATK: 190 | DEF: 65 | SPD: 110", desc:"3 Phases: Blade Winds, Hurricane Vortex, Eye of the Storm."},
+  {id:"FB-050", name:"Titan of the Primordial Earth (Floor 50)", type:"Floor Boss", element:"Earth / Light", stats:"HP: 25,000 | ATK: 210 | DEF: 130 | SPD: 45", desc:"3 Phases: Titan Fist, Gaia’s Wrath, Continental Cataclysm."},
+  {id:"FB-060", name:"Arch-Inquisitor Malakor (Floor 60)", type:"Floor Boss", element:"Dark / Light", stats:"HP: 30,000 | ATK: 220 | DEF: 95 | SPD: 85", desc:"3 Phases: Holy Judgement, Eclipse Beam, Apocalypse Decree."},
+  {id:"FB-070", name:"Sovereign of the Eternal Night (Floor 70)", type:"Floor Boss", element:"Dark", stats:"HP: 38,000 | ATK: 240 | DEF: 100 | SPD: 90", desc:"3 Phases: Void Slash, Shadow Singularity, Endless Night."},
+  {id:"FB-080", name:"Dragon King Ignis-Nox (Floor 80)", type:"Floor Boss", element:"Fire / Dark", stats:"HP: 48,000 | ATK: 270 | DEF: 110 | SPD: 95", desc:"3 Phases: Apocalyptic Claw, Hellfire Storm, Extinction Breath."},
+  {id:"FB-090", name:"Herald of Nythar (Floor 90)", type:"Floor Boss", element:"Dark / Universal", stats:"HP: 60,000 | ATK: 300 | DEF: 120 | SPD: 110", desc:"3 Phases: Herald's Strike, Corruption Wave, Gaze of the Dark God."},
+  {id:"SB-001", name:"Gatekeeper’s Vanguard (Diff 5)", type:"Startup Boss", element:"Normal / Earth", stats:"HP: 6,500 | ATK: 140 | DEF: 80 | SPD: 45", desc:"Heavy Iron Cleave, Vanguard Fortress, Crushing Earth Slam."},
+  {id:"SB-002", name:"Corrupted Chimera (Diff 5)", type:"Startup Boss", element:"Fire / Water / Earth", stats:"HP: 9,000 | ATK: 165 | DEF: 60 | SPD: 80", desc:"Triple Threat, Beastly Roar, Chimera Rampage."},
+  {id:"SB-003", name:"Abyssal Executioner (Diff 5)", type:"Startup Boss", element:"Dark / Normal", stats:"HP: 12,500 | ATK: 190 | DEF: 75 | SPD: 85", desc:"Executioner Axe, Shadow Shackles, Death Sentence."},
+  {id:"SB-004", name:"Primordial Golem of Ruin (Diff 5)", type:"Startup Boss", element:"Earth / Dark", stats:"HP: 16,000 | ATK: 175 | DEF: 140 | SPD: 35", desc:"Granite Fist, Absorb Mana, Tremor Blast."},
+  {id:"SB-005", name:"Avatar of the Cult Leader (Diff 5)", type:"Startup Boss", element:"Dark / Light", stats:"HP: 21,000 | ATK: 210 | DEF: 90 | SPD: 95", desc:"Cultist's Curse, False Miracle, Darkness Incarnate."},
+  {id:"RB-001", name:"Volcanic Behemoth - Ignis-Gorgo", type:"Raid Boss", element:"Fire / Earth", stats:"HP: 75,000 | ATK: 280 | DEF: 130 | SPD: 60", desc:"3 Phases: Magma Stamp, Volcanic Eruption, Core Meltdown."},
+  {id:"RB-002", name:"Leviathan of the Eternal Abyss - Thalassor", type:"Raid Boss", element:"Water / Dark", stats:"HP: 85,000 | ATK: 270 | DEF: 140 | SPD: 70", desc:"3 Phases: Abyssal Tail Whip, Tidal Megastorm, Wrath of the Sunken Gods."},
+  {id:"RB-003", name:"Tempest Storm Dragon - Aerondight", type:"Raid Boss", element:"Wind / Light", stats:"HP: 90,000 | ATK: 290 | DEF: 110 | SPD: 120", desc:"3 Phases: Lightning Slash, Thunder Typhoon, Divine Tempest Execution."},
+  {id:"RB-004", name:"Colossus of the Ruined Empire - Aurelius Prime", type:"Raid Boss", element:"Normal / Earth / Light", stats:"HP: 100,000 | ATK: 310 | DEF: 160 | SPD: 50", desc:"3 Phases: Imperial Judgement, Empire’s Fall, Absolute Imperial Wrath."},
+  {id:"RB-005", name:"World-Eater Hydras - Ouroboros of Void", type:"Raid Boss", element:"Dark / Universal", stats:"HP: 120,000 | ATK: 340 | DEF: 150 | SPD: 90", desc:"3 Phases: Void Bite, World Collapse, Return to Nothingness."},
+  {id:"FB-100", name:"Nythar, The Dark God (Floor 100)", type:"Final Boss", element:"Dark / Null", stats:"HP: 250,000 | ATK: 450 | DEF: 200 | SPD: 130", desc:"4 Phases: Void Slash, Eclipse Annihilation, Gaze of the Dark God, The Return to Nothingness."}
+];
+
+const consonants = ["b","c","d","f","g","h","j","k","l","m","n","p","r","s","t","v","w","y","z","br","cr","dr","fl","gl","pr","str","th","sh","ch","ph"];
+const vowels = ["a","e","i","o","u","ae","io","ea","ou","ai"];
+const suffixes = ["ius","ael","ora","ith","ion","us","a","en","or","ix","aria","os","yn","ia"];
+
+function generateFantasyName(){
+  let pattern = Math.random();
+  let name = "";
+  let pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  if(pattern < 0.3) {
+    name = pick(consonants) + pick(vowels) + pick(suffixes);
+  } else if(pattern < 0.6) {
+    name = pick(consonants) + pick(vowels) + pick(consonants) + pick(vowels) + pick(suffixes);
+  } else if(pattern < 0.85) {
+    name = pick(consonants) + pick(vowels) + pick(consonants) + "-" + pick(consonants) + pick(vowels) + pick(suffixes);
+  } else {
+    name = pick(consonants) + pick(vowels) + pick(suffixes) + "-" + pick(consonants) + pick(vowels);
+  }
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+const factions = {
+  Human: [
+    {name:"Valerian Royal Knights", nobleId:"ID-NOB-HUM-01", desc:"Vanguard Command = Effect: Increases team Physical ATK by 12% and grants 10% resistance against physical damage during the first 2 turns."},
+    {name:"Aurelian Merchant Guild", nobleId:"ID-NOB-HUM-02", desc:"Monopoly Network = Effect: Increases gold/currency gains from battles by 20% and reduces shop purchase costs by 15%."},
+    {name:"Imperial Academic Circle", nobleId:"ID-NOB-HUM-03", desc:"Arcane Supremacy = Effect: Increases Magic ATK by 12% and reduces skill SP/Mana consumption by 10%."},
+    {name:"Elysium Noble Council", nobleId:"ID-NOB-HUM-04", desc:"Sovereign Authority = Effect: Increases Ultimate Gauge (UG) charge rate by 15% and boosts team Leadership stats."}
+  ],
+  Elven: [
+    {name:"Elaria Guardian Circle", nobleId:"ID-NOB-ELF-01", desc:"Nature's Sanctuary = Effect: Grants party members a continuous Regen effect equal to 4% Max HP at start of each turn."},
+    {name:"Silvery Moon Alchemists", nobleId:"ID-NOB-ELF-02", desc:"Elixir Mastery = Effect: Increases healing potency of items and skills by 25%."},
+    {name:"Ancient Archery Order", nobleId:"ID-NOB-ELF-03", desc:"Trueshot Precision = Effect: Increases Critical Rate by 10% and completely bypasses target Evasion stats."},
+    {name:"World Tree High Council", nobleId:"ID-NOB-ELF-04", desc:"Ancestral Resonance = Effect: Increases elemental resistance across the board by 15% and grants immunity to Silence and Blind."}
+  ],
+  Dwarven: [
+    {name:"Karak-Dur Forge Masters", nobleId:"ID-NOB-DWF-01", desc:"Masterwork Durability = Effect: Increases Armor and Equipment durability by 30%, reducing incoming physical damage by 10%."},
+    {name:"Deep Earth Mining Syndicate", nobleId:"ID-NOB-DWF-02", desc:"Mineral Abundance = Effect: Increases drop rate of rare crafting materials and ores by 25%."},
+    {name:"Rune-Engineers Guild", nobleId:"ID-NOB-DWF-03", desc:"Rune-Forged Shielding = Effect: Grants all party members a permanent Shield equal to 12% Max HP at start of battle."},
+    {name:"Mountain King’s Vanguard", nobleId:"ID-NOB-DWF-04", desc:"Unyielding Bastion = Effect: Increases Defense and Magic Resistance by 20% when HP drops below 40%, and grants total immunity to Stun."}
+  ],
+  Beastfolk: [
+    {name:"Lunaris Wolf Pack", nobleId:"ID-NOB-BST-01", desc:"Pack Hunter Instinct = Effect: Increases party Speed by 10% and grants 15% damage bonus when attacking debuffed targets."},
+    {name:"Rajah Tiger Dynasty", nobleId:"ID-NOB-BST-02", desc:"Apex Predator Might = Effect: Increases Physical ATK by 15%. Defeating an enemy boosts ATK further by 5%."},
+    {name:"Kitsune Spirit Clan", nobleId:"ID-NOB-BST-03", desc:"Illusionary Veil = Effect: Increases Evasion by 15% and provides 25% chance to dodge magic projectile attacks."},
+    {name:"Felis Trade Syndicate", nobleId:"ID-NOB-BST-04", desc:"Shadow Broker Tactics = Effect: Increases critical damage multiplier by 25% and grants preemptive action priority."}
+  ]
+};
+
+function performRecruitment(type){
+  let costGold = 0, costGems = 0, costTickets = 0, costSpecial = 0;
+  let minStar = 1, maxStar = 3;
+
+  if(type === 'gold') { costGold = 1000; minStar = 1; maxStar = 3; }
+  else if(type === 'gems') { costGems = 100; minStar = 1; maxStar = 4; }
+  else if(type === 'tickets') { costTickets = 1; minStar = 2; maxStar = 4; }
+  else if(type === 'special') { costSpecial = 1; minStar = 5; maxStar = 5; }
+
+  if(state.gold < costGold || state.gems < costGems || state.tickets < costTickets || state.specialTickets < costSpecial){
+    openModal("Recruitment Failed", "<p class='danger'>Insufficient resources for this recruitment banner!</p>");
+    return;
+  }
+
+  state.gold -= costGold;
+  state.gems -= costGems;
+  state.tickets -= costTickets;
+  state.specialTickets -= costSpecial;
+
+  let star = Math.floor(Math.random() * (maxStar - minStar + 1)) + minStar;
+  if(type === 'special') star = 5;
+
+  let raceKeys = Object.keys(factions);
+  let race = raceKeys[Math.floor(Math.random() * raceKeys.length)];
+  let age = race === 'Human' ? Math.floor(Math.random()*52)+17 : race === 'Elven' ? Math.floor(Math.random()*165)+35 : race === 'Dwarven' ? Math.floor(Math.random()*170)+30 : Math.floor(Math.random()*85)+15;
+  let gender = Math.random() < 0.5 ? "Male" : "Female";
+  let name = generateFantasyName();
+
+  let isNoble = Math.random() < 0.1;
+  let nobleInfo = null;
+  if(isNoble){
+    let factionList = factions[race];
+    let chosenFaction = factionList[Math.floor(Math.random() * factionList.length)];
+    nobleInfo = chosenFaction;
+    name += " " + chosenFaction.name.split(" ")[0];
+  }
+
+  let selectedBasicSkills = [];
+  let basicPool = [...dbBasicSkills];
+  let numBasic = (star >= 4) ? 3 : 2;
+  for(let i=0; i<numBasic; i++){
+    if(i === 0 || (i === 1 && Math.random() < (star>=4 ? 0.8 : 0.1)) || (i === 2 && Math.random() < 0.1)){
+      if(basicPool.length > 0){
+        let idx = Math.floor(Math.random() * basicPool.length);
+        selectedBasicSkills.push(basicPool[idx]);
+        basicPool.splice(idx,1);
+      }
+    }
+  }
+
+  let selectedUlt = null;
+  if(star >= 4 && dbUltimateSkills.length > 0){
+    selectedUlt = dbUltimateSkills[Math.floor(Math.random() * dbUltimateSkills.length)];
+  }
+
+  let selectedTraits = [];
+  let traitPool = [...dbTraits];
+  let numTraits = (star >= 4) ? 3 : 2;
+  for(let i=0; i<numTraits; i++){
+    if(i === 0 || (i === 1 && Math.random() < (star>=4 ? 0.8 : 0.1)) || (i === 2 && Math.random() < 0.1)){
+      if(traitPool.length > 0){
+        let idx = Math.floor(Math.random() * traitPool.length);
+        selectedTraits.push(traitPool[idx]);
+        traitPool.splice(idx,1);
+      }
+    }
+  }
+
+  let roles = ["Attacker", "Defender", "Healer", "Support"];
+  let role = roles[Math.floor(Math.random() * roles.length)];
+  let element = ["Fire", "Water", "Wind", "Earth", "Light", "Dark", "Normal"][Math.floor(Math.random()*7)];
+  let heroId = "HERO-" + Math.floor(100000 + Math.random() * 900000);
+
+  let newHero = {
+    id: heroId,
+    name: name,
+    race: race,
+    age: age,
+    gender: gender,
+    star: star,
+    role: role,
+    element: element,
+    level: 1, // Always LVL 1 upon recruitment as requested
+    exp: 0,
+    nextExp: 1000,
+    status: "AVAILABLE",
+    condition: "Healthy",
+    hp: 500 + star*100,
+    maxHp: 500 + star*100,
+    sp: 100,
+    maxSp: 100,
+    physAtk: 120 + star*25,
+    magicAtk: 100 + star*20,
+    physDef: 80 + star*15,
+    magicDef: 80 + star*15,
+    speed: 50 + star*5,
+    critRate: 10,
+    critDmg: 150,
+    evasion: 5,
+    accuracy: 95,
+    ug: 0,
+    shield: 0,
+    resistances: { normal: 0, fire: 0, water: 0, wind: 0, earth: 0, light: 0, dark: 0 },
+    effectResistance: 10,
+    noble: nobleInfo,
+    basicSkills: selectedBasicSkills,
+    ultimate: selectedUlt,
+    traits: selectedTraits,
+    equipment: { weapon: null, armor: null, accessory: null }
+  };
+
+  state.heroes.push(newHero);
+
+  let logEntry = {
+    type: type.toUpperCase() + " RECRUIT",
+    cost: costGold ? `${costGold} Gold` : costGems ? `${costGems} Gems` : costTickets ? `${costTickets} Ticket` : `1 Special Ticket`,
+    heroId: heroId,
+    name: name + (nobleInfo ? ` (${nobleInfo.nobleId})` : ""),
+    race: race,
+    role: role,
+    star: "★".repeat(star),
+    newDuplicate: "NEW",
+    result: "SUCCESS"
+  };
+  state.recruitmentLog.push(logEntry);
+
+  save(activeSlot || 1);
+  openModal("Recruitment Successful!", `
+    <div class="rank-up">
+      <b>NEW HERO ACQUIRED! (Lv. 1)</b><br>
+      <strong style="font-size:20px;color:var(--gold)">${name}</strong><br>
+      <b>ID:</b> ${heroId} | <b>Star:</b> ★${star} | <b>Race:</b> ${race} (${gender}, ${age} yrs)<br>
+      <b>Role:</b> ${role} | <b>Element:</b> ${element}<br>
+      ${nobleInfo ? `<br><b style="color:var(--cyan)">NOBLE ID: ${nobleInfo.nobleId}</b><br><small>${nobleInfo.desc}</small><br>` : ""}
+    </div>
+  `);
+  renderHub("recruitmentMenu");
+}
+
+// Hero Roster Filter State
+let rosterFilter = { role: "ALL", star: "ALL", race: "ALL", status: "ALL" };
+
+function setRosterFilter(category, val) {
+  rosterFilter[category] = val;
+  renderHub("heroes");
+}
+
+function openHeroDetail(heroId) {
+  let h = state.heroes.find(x => x.id === heroId);
+  if(!h) return;
+
+  if(h.exp === undefined) h.exp = 0;
+  if(h.nextExp === undefined) h.nextExp = 1000;
+  if(h.physAtk === undefined) h.physAtk = 150;
+  if(h.magicAtk === undefined) h.magicAtk = 120;
+  if(h.physDef === undefined) h.physDef = 90;
+  if(h.magicDef === undefined) h.magicDef = 90;
+  if(h.speed === undefined) h.speed = 60;
+  if(h.critRate === undefined) h.critRate = 12;
+  if(h.critDmg === undefined) h.critDmg = 150;
+  if(h.evasion === undefined) h.evasion = 5;
+  if(h.accuracy === undefined) h.accuracy = 100;
+  if(h.ug === undefined) h.ug = 0;
+  if(h.shield === undefined) h.shield = 0;
+  if(h.resistances === undefined) h.resistances = { normal: 0, fire: 0, water: 0, wind: 0, earth: 0, light: 0, dark: 0 };
+  if(h.effectResistance === undefined) h.effectResistance = 10;
+  if(h.equipment === undefined) h.equipment = { weapon: null, armor: null, accessory: null };
+
+  let expPercent = Math.min(100, Math.round((h.exp / h.nextExp) * 100));
+
+  let bodyHtml = `
+    <div style="display:grid;gap:15px;">
+      <div class="info-item" style="background:#090e19">
+        <small>HERO IDENTITY</small>
+        <b style="font-size:18px;color:var(--gold);margin-top:4px">${h.name}</b>
+        <div style="margin-top:6px;font-size:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;color:var(--muted)">
+          <div><b>Race:</b> ${h.race}</div>
+          <div><b>Age:</b> ${h.age}</div>
+          <div><b>Gender:</b> ${h.gender}</div>
+          <div><b>Role:</b> ${h.role}</div>
+          <div><b>Element:</b> ${h.element}</div>
+          <div><b>Star:</b> ★${h.star}</div>
+        </div>
+        ${h.noble ? `<div style="margin-top:8px;padding:8px;background:rgba(112,217,232,0.1);border:1px solid var(--cyan);border-radius:6px;font-size:11px"><b style="color:var(--cyan)">Noble ID: ${h.noble.nobleId} (${h.noble.name})</b><br>${h.noble.desc}</div>` : ""}
+      </div>
+
+      <div class="exp-container">
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <b>Lv. ${h.level}</b>
+          <span style="color:var(--muted)">${h.exp.toLocaleString()} / ${h.nextExp.toLocaleString()} EXP</span>
+        </div>
+        <div class="exp-bar-bg"><div class="exp-bar-fill" style="width:${expPercent}%"></div></div>
+      </div>
+
+      <div class="db-section" style="margin-bottom:0">
+        <h3>Primary & Combat Stats</h3>
+        <div class="info">
+          ${item("HP (Hit Points)", `${h.hp} / ${h.maxHp}`)}
+          ${item("SP / Mana", `${h.sp || 100} / ${h.maxSp || 100}`)}
+          ${item("Physical ATK", h.physAtk)}
+          ${item("Magic ATK", h.magicAtk)}
+          ${item("Physical Defense", h.physDef)}
+          ${item("Magic Defense", h.magicDef)}
+          ${item("Speed", h.speed)}
+          ${item("Critical Rate", h.critRate + "%")}
+          ${item("Critical Damage", h.critDmg + "%")}
+          ${item("Evasion / Dodge", h.evasion + "%")}
+          ${item("Accuracy", h.accuracy + "%")}
+          ${item("Ultimate Gauge", h.ug + "%")}
+        </div>
+      </div>
+
+      <div class="db-section" style="margin-bottom:0">
+        <h3>Elemental & Status Resistances</h3>
+        <div class="info">
+          ${item("Normal Res", h.resistances.normal + "%")}
+          ${item("Fire Res", h.resistances.fire + "%")}
+          ${item("Water Res", h.resistances.water + "%")}
+          ${item("Wind Res", h.resistances.wind + "%")}
+          ${item("Earth Res", h.resistances.earth + "%")}
+          ${item("Light Res", h.resistances.light + "%")}
+          ${item("Dark Res", h.resistances.dark + "%")}
+          ${item("Effect Resistance", h.effectResistance + "%")}
+        </div>
+      </div>
+
+      <div class="db-section" style="margin-bottom:0">
+        <h3>Skills & Traits</h3>
+        <div style="display:grid;gap:8px">
+          ${h.basicSkills.map((s, idx) => `<div class="db-card"><b>[Basic Skill ${idx+1}] ${s.name} (Lv. 1)</b><p>${s.desc}</p></div>`).join("")}
+          ${h.ultimate ? `<div class="db-card" style="border-color:var(--gold)"><b>[Ultimate Skill] ${h.ultimate.name} (Lv. 1)</b><p><b>Cost:</b> ${h.ultimate.cost} | ${h.ultimate.desc}</p></div>` : ""}
+          ${h.traits.map((t, idx) => `<div class="db-card"><b>[Trait ${idx+1}] ${t.name}</b><p>${t.desc}</p></div>`).join("")}
+        </div>
+      </div>
+
+      <div class="db-section" style="margin-bottom:0">
+        <h3>Quick Use Equipment</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div class="equip-slot">
+            <b>[ WEAPON ]</b>
+            ${h.equipment.weapon ? h.equipment.weapon : '<span style="color:var(--muted)">Empty</span>'}
+          </div>
+          <div class="equip-slot">
+            <b>[ ARMOR ]</b>
+            ${h.equipment.armor ? h.equipment.armor : '<span style="color:var(--muted)">Empty</span>'}
+          </div>
+          <div class="equip-slot">
+            <b>[ ACCESSORY ]</b>
+            ${h.equipment.accessory ? h.equipment.accessory : '<span style="color:var(--muted)">Empty</span>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  openModal(`Hero Detail — ${h.name} (${h.id})`, bodyHtml);
+}
+
+function heroPage(){
+  let hs = state.heroes.filter(h => {
+    if(rosterFilter.role !== "ALL" && h.role !== rosterFilter.role) return false;
+    if(rosterFilter.star !== "ALL" && h.star !== parseInt(rosterFilter.star)) return false;
+    if(rosterFilter.race !== "ALL" && h.race !== rosterFilter.race) return false;
+    if(rosterFilter.status !== "ALL" && h.status !== rosterFilter.status) return false;
+    return true;
+  });
+
+  return `
+    <h2>Hero Roster</h2>
+    <div class="sub">Advanced filtered view. Select any hero to view identity, stats, skills, EXP progress, and quick equipment slots.</div>
+    
+    <div class="filterbar">
+      <div class="filter-group">
+        <label>ROLE</label>
+        <div class="filter-options">
+          <span class="chip ${rosterFilter.role==='ALL'?'on':''}" onclick="setRosterFilter('role','ALL')">All</span>
+          <span class="chip ${rosterFilter.role==='Attacker'?'on':''}" onclick="setRosterFilter('role','Attacker')">Attacker</span>
+          <span class="chip ${rosterFilter.role==='Defender'?'on':''}" onclick="setRosterFilter('role','Defender')">Defender</span>
+          <span class="chip ${rosterFilter.role==='Healer'?'on':''}" onclick="setRosterFilter('role','Healer')">Healer</span>
+          <span class="chip ${rosterFilter.role==='Support'?'on':''}" onclick="setRosterFilter('role','Support')">Support</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>BINTANG (STAR)</label>
+        <div class="filter-options">
+          <span class="chip ${rosterFilter.star==='ALL'?'on':''}" onclick="setRosterFilter('star','ALL')">All</span>
+          <span class="chip ${rosterFilter.star==='1'?'on':''}" onclick="setRosterFilter('star','1')">★1</span>
+          <span class="chip ${rosterFilter.star==='2'?'on':''}" onclick="setRosterFilter('star','2')">★2</span>
+          <span class="chip ${rosterFilter.star==='3'?'on':''}" onclick="setRosterFilter('star','3')">★3</span>
+          <span class="chip ${rosterFilter.star==='4'?'on':''}" onclick="setRosterFilter('star','4')">★4</span>
+          <span class="chip ${rosterFilter.star==='5'?'on':''}" onclick="setRosterFilter('star','5')">★5</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>RACE</label>
+        <div class="filter-options">
+          <span class="chip ${rosterFilter.race==='ALL'?'on':''}" onclick="setRosterFilter('race','ALL')">All</span>
+          <span class="chip ${rosterFilter.race==='Human'?'on':''}" onclick="setRosterFilter('race','Human')">Human</span>
+          <span class="chip ${rosterFilter.race==='Elven'?'on':''}" onclick="setRosterFilter('race','Elven')">Elven</span>
+          <span class="chip ${rosterFilter.race==='Dwarven'?'on':''}" onclick="setRosterFilter('race','Dwarven')">Dwarven</span>
+          <span class="chip ${rosterFilter.race==='Beastfolk'?'on':''}" onclick="setRosterFilter('race','Beastfolk')">Beastfolk</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>STATUS</label>
+        <div class="filter-options">
+          <span class="chip ${rosterFilter.status==='ALL'?'on':''}" onclick="setRosterFilter('status','ALL')">All</span>
+          <span class="chip ${rosterFilter.status==='AVAILABLE'?'on':''}" onclick="setRosterFilter('status','AVAILABLE')">Available</span>
+          <span class="chip ${rosterFilter.status==='BUSY'?'on':''}" onclick="setRosterFilter('status','BUSY')">Busy</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-grid">
+      ${hs.length ? hs.map(h => `
+        <div class="hero-card" onclick="openHeroDetail('${h.id}')">
+          <div class="avatar">★${h.star}</div>
+          <div class="hero-card-info">
+            <b>${h.name}</b>
+            <small>${h.race} · ${h.role} · Lv.${h.level}</small>
+            <small style="color:var(--cyan)">${h.id}${h.noble ? ' 👑' : ''}</small>
+          </div>
+          <div class="status ${h.status!=='AVAILABLE'?'busy':''}">${h.status}</div>
+        </div>
+      `).join("") : `<div class="conf" style="grid-column:1/-1;text-align:center">No heroes match the selected filter criteria.</div>`}
+    </div>
+  `;
+}
+
+// ==========================================
+// UPDATE 0.1.8 — PARTY MANAGEMENT SYSTEM
+// ==========================================
+
+let partySelectFilter = { role: "ALL", star: "ALL", race: "ALL", status: "ALL" };
+let currentEditingPartyId = null;
+let currentEditingSlotType = null; // 'front', 'back'
+let currentEditingSlotIndex = null;
+
+function partyPage(){
+  syncMaster();
+  return `
+    <h2>Party Management (Up to 20 Parties)</h2>
+    <div class="sub">Manage your battle formations (3 Front, 2 Back) and 5 Medical Slots per party. Hero status syncs to BUSY automatically.</div>
+    <div class="party-grid">
+      ${state.parties.map(p => {
+        let filledCount = p.front.filter(Boolean).length + p.back.filter(Boolean).length;
+        return `
+          <div class="party-card" onclick="openPartyEditor(${p.id})">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong style="color:var(--gold);font-size:14px">${p.name}</strong>
+              <small style="color:var(--cyan)">${filledCount} / 5 Heroes</small>
+            </div>
+            <div class="party-slots-preview">
+              <div class="slot-mini ${p.front[0]?'filled':''}">${p.front[0] ? p.front[0].name.split(' ')[0] : 'Front 1'}</div>
+              <div class="slot-mini ${p.front[1]?'filled':''}">${p.front[1] ? p.front[1].name.split(' ')[0] : 'Front 2'}</div>
+              <div class="slot-mini ${p.front[2]?'filled':''}">${p.front[2] ? p.front[2].name.split(' ')[0] : 'Front 3'}</div>
+              <div class="slot-mini ${p.back[0]?'filled':''}">${p.back[0] ? p.back[0].name.split(' ')[0] : 'Back 1'}</div>
+              <div class="slot-mini ${p.back[1]?'filled':''}">${p.back[1] ? p.back[1].name.split(' ')[0] : 'Back 2'}</div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function openPartyEditor(partyId){
+  currentEditingPartyId = partyId;
+  let p = state.parties.find(x => x.id === partyId);
+  if(!p) return;
+
+  let bodyHtml = `
+    <div style="display:grid;gap:15px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="color:var(--gold)">${p.name} Configuration</h3>
+        <button class="btn primary" style="padding:6px 12px;font-size:11px" onclick="fairySuggestParty(${partyId})">✦ Fairy Suggest Party</button>
+      </div>
+
+      <div>
+        <label style="font-size:10px;color:var(--muted);letter-spacing:1px">FRONT FORMATION (3 Heroes)</label>
+        <div class="formation-container">
+          <div class="formation-row">
+            ${p.front.map((h, idx) => `
+              <div class="slot-box ${h?'filled':''}" onclick="openHeroSelector(${partyId}, 'front', ${idx})">
+                ${h ? `<b style="color:var(--gold);font-size:12px">${h.name}</b><small>★${h.star} · ${h.role}</small><small style="color:var(--cyan)">Lv.${h.level}</small>` : `<span style="color:var(--muted)">[ EMPTY Front ${idx+1} ]</span>`}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:10px;color:var(--muted);letter-spacing:1px">BACK FORMATION (2 Heroes)</label>
+        <div class="formation-container">
+          <div class="formation-row back">
+            ${p.back.map((h, idx) => `
+              <div class="slot-box ${h?'filled':''}" onclick="openHeroSelector(${partyId}, 'back', ${idx})">
+                ${h ? `<b style="color:var(--gold);font-size:12px">${h.name}</b><small>★${h.star} · ${h.role}</small><small style="color:var(--cyan)">Lv.${h.level}</small>` : `<span style="color:var(--muted)">[ EMPTY Back ${idx+1} ]</span>`}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:10px;color:var(--muted);letter-spacing:1px">MEDICAL SLOTS (5 Slots)</label>
+        <div class="medical-grid">
+          ${p.medical.map((m, idx) => `
+            <div class="medical-box">
+              [ Slot ${idx+1} ]<br>${m ? m : '<span style="color:var(--muted)">Empty</span>'}
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button class="btn danger" style="flex:1" onclick="clearParty(${partyId})">Clear Party Formation</button>
+        <button class="btn primary" style="flex:1" onclick="renderHub('party'); closeModal();">Done / Save</button>
+      </div>
+    </div>
+  `;
+  openModal(`Edit ${p.name}`, bodyHtml);
+}
+
+function fairySuggestParty(partyId){
+  let av = state.heroes.filter(h => h.status === "AVAILABLE");
+  if(av.length === 0){
+    openModal("Fairy Suggestion", `<p class='danger'>Fairy: Master, I found no available heroes with status AVAILABLE to suggest!</p>`);
+    return;
+  }
+  let picked = av.slice(0, 5);
+  let suggestionText = `
+    <div class="conf">
+      <b>FAIRY:</b><br>
+      "Master, saya menemukan beberapa Hero yang tersedia untuk Party ini."<br><br>
+      <b>Recommended Hero:</b><br>
+      ${picked.map(h => `<br><b>${h.name}</b><br>★★★★★`.slice(0, 30) + `★${h.star}<br>${h.role}<br>`).join("")}
+      <br>
+      Apakah Master ingin menyetujui saran ini?
+    </div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn primary" style="flex:1" onclick="applyFairySuggestion(${partyId})">[ AGREE ]</button>
+      <button class="btn danger" style="flex:1" onclick="closeModal()">[ DECLINE ]</button>
+    </div>
+  `;
+  openModal("Fairy Party Recommendation", suggestionText);
+}
+
+window.applyFairySuggestion = function(partyId){
+  let p = state.parties.find(x => x.id === partyId);
+  let av = state.heroes.filter(h => h.status === "AVAILABLE");
+  
+  // Clear old party members' busy status if any were in this party
+  [...p.front, ...p.back].forEach(h => {
+    if(h){
+      let ref = state.heroes.find(x => x.id === h.id);
+      if(ref) ref.status = "AVAILABLE";
+    }
+  });
+
+  p.front = [null, null, null];
+  p.back = [null, null];
+
+  let count = 0;
+  for(let h of av){
+    if(count < 3) p.front[count] = h;
+    else if(count < 5) p.back[count - 3] = h;
+    else break;
+    h.status = "BUSY";
+    count++;
+  }
+
+  save(activeSlot || 1);
+  closeModal();
+  openPartyEditor(partyId);
+}
+
+function openHeroSelector(partyId, slotType, slotIndex){
+  currentEditingPartyId = partyId;
+  currentEditingSlotType = slotType;
+  currentEditingSlotIndex = slotIndex;
+
+  let hs = state.heroes.filter(h => {
+    if(partySelectFilter.role !== "ALL" && h.role !== partySelectFilter.role) return false;
+    if(partySelectFilter.star !== "ALL" && h.star !== parseInt(partySelectFilter.star)) return false;
+    if(partySelectFilter.race !== "ALL" && h.race !== partySelectFilter.race) return false;
+    if(partySelectFilter.status !== "ALL" && h.status !== partySelectFilter.status) return false;
+    return true;
+  });
+
+  let selectorHtml = `
+    <div style="display:grid;gap:12px">
+      <h3 style="color:var(--gold)">SELECT HERO FOR ${slotType.toUpperCase()} SLOT ${slotIndex+1}</h3>
+      <div class="filterbar">
+        <div class="filter-group">
+          <label>ROLE</label>
+          <div class="filter-options">
+            <span class="chip ${partySelectFilter.role==='ALL'?'on':''}" onclick="setPartyFilter('role','ALL')">All</span>
+            <span class="chip ${partySelectFilter.role==='Attacker'?'on':''}" onclick="setPartyFilter('role','Attacker')">Attacker</span>
+            <span class="chip ${partySelectFilter.role==='Defender'?'on':''}" onclick="setPartyFilter('role','Defender')">Defender</span>
+            <span class="chip ${partySelectFilter.role==='Healer'?'on':''}" onclick="setPartyFilter('role','Healer')">Healer</span>
+            <span class="chip ${partySelectFilter.role==='Support'?'on':''}" onclick="setPartyFilter('role','Support')">Support</span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>BINTANG</label>
+          <div class="filter-options">
+            <span class="chip ${partySelectFilter.star==='ALL'?'on':''}" onclick="setPartyFilter('star','ALL')">All</span>
+            <span class="chip ${partySelectFilter.star==='1'?'on':''}" onclick="setPartyFilter('star','1')">★1</span>
+            <span class="chip ${partySelectFilter.star==='2'?'on':''}" onclick="setPartyFilter('star','2')">★2</span>
+            <span class="chip ${partySelectFilter.star==='3'?'on':''}" onclick="setPartyFilter('star','3')">★3</span>
+            <span class="chip ${partySelectFilter.star==='4'?'on':''}" onclick="setPartyFilter('star','4')">★4</span>
+            <span class="chip ${partySelectFilter.star==='5'?'on':''}" onclick="setPartyFilter('star','5')">★5</span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>RACE</label>
+          <div class="filter-options">
+            <span class="chip ${partySelectFilter.race==='ALL'?'on':''}" onclick="setPartyFilter('race','ALL')">All</span>
+            <span class="chip ${partySelectFilter.race==='Human'?'on':''}" onclick="setPartyFilter('race','Human')">Human</span>
+            <span class="chip ${partySelectFilter.race==='Elven'?'on':''}" onclick="setPartyFilter('race','Elven')">Elven</span>
+            <span class="chip ${partySelectFilter.race==='Dwarven'?'on':''}" onclick="setPartyFilter('race','Dwarven')">Dwarven</span>
+            <span class="chip ${partySelectFilter.race==='Beastfolk'?'on':''}" onclick="setPartyFilter('race','Beastfolk')">Beastfolk</span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>STATUS</label>
+          <div class="filter-options">
+            <span class="chip ${partySelectFilter.status==='ALL'?'on':''}" onclick="setPartyFilter('status','ALL')">All</span>
+            <span class="chip ${partySelectFilter.status==='AVAILABLE'?'on':''}" onclick="setPartyFilter('status','AVAILABLE')">Available</span>
+            <span class="chip ${partySelectFilter.status==='BUSY'?'on':''}" onclick="setPartyFilter('status','BUSY')">Busy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-grid" style="max-height:350px;overflow-y:auto">
+        ${hs.length ? hs.map(h => `
+          <div class="hero-card" onclick="assignHeroToSlot('${h.id}')" style="${h.status !== 'AVAILABLE' ? 'opacity:0.5;border-color:var(--red)' : ''}">
+            <div class="avatar">★${h.star}</div>
+            <div class="hero-card-info">
+              <b>${h.name}</b>
+              <small>${h.race} · ${h.role} · Lv.${h.level}</small>
+              <small style="color:${h.status==='AVAILABLE'?'var(--green)':'var(--red)'}">Status: ${h.status}</small>
+            </div>
+          </div>
+        `).join("") : `<div class="conf" style="grid-column:1/-1;text-align:center">No heroes match filter criteria.</div>`}
+      </div>
+
+      <button class="btn danger" onclick="removeHeroFromSlot(${partyId}, '${slotType}', ${slotIndex})">Remove Hero from Slot</button>
+    </div>
+  `;
+  openModal("Select Hero", selectorHtml);
+}
+
+function setPartyFilter(category, val){
+  partySelectFilter[category] = val;
+  openHeroSelector(currentEditingPartyId, currentEditingSlotType, currentEditingSlotIndex);
+}
+
+window.assignHeroToSlot = function(heroId){
+  let h = state.heroes.find(x => x.id === heroId);
+  if(!h){ return; }
+  if(h.status !== "AVAILABLE"){
+    openModal("Action Denied", "<p class='danger'>Hero with status BUSY cannot be selected for a party!</p>");
+    return;
+  }
+
+  let p = state.parties.find(x => x.id === currentEditingPartyId);
+  if(!p) return;
+
+  // If slot already had a hero, make that old hero AVAILABLE
+  let oldHero = p[currentEditingSlotType][currentEditingSlotIndex];
+  if(oldHero){
+    let oldRef = state.heroes.find(x => x.id === oldHero.id);
+    if(oldRef) oldRef.status = "AVAILABLE";
+  }
+
+  // Assign new hero & mark BUSY
+  p[currentEditingSlotType][currentEditingSlotIndex] = h;
+  h.status = "BUSY";
+
+  save(activeSlot || 1);
+  closeModal();
+  openPartyEditor(currentEditingPartyId);
+}
+
+window.removeHeroFromSlot = function(partyId, slotType, slotIndex){
+  let p = state.parties.find(x => x.id === partyId);
+  if(!p) return;
+
+  let h = p[slotType][slotIndex];
+  if(h){
+    let ref = state.heroes.find(x => x.id === h.id);
+    if(ref) ref.status = "AVAILABLE";
+    p[slotType][slotIndex] = null;
+  }
+
+  save(activeSlot || 1);
+  closeModal();
+  openPartyEditor(partyId);
+}
+
+function clearParty(partyId){
+  let p = state.parties.find(x => x.id === partyId);
+  if(!p) return;
+
+  [...p.front, ...p.back].forEach(h => {
+    if(h){
+      let ref = state.heroes.find(x => x.id === h.id);
+      if(ref) ref.status = "AVAILABLE";
+    }
+  });
+
+  p.front = [null, null, null];
+  p.back = [null, null];
+
+  save(activeSlot || 1);
+  closeModal();
+  openPartyEditor(partyId);
+}
+
+// Render Hub Main Switch
+function renderHub(page){
+ syncMaster();const c=heroCounts();
+ $("mName").textContent=state.masterName||"MASTER";$("mId").textContent=state.masterId||"MASTER-000000";
+ $("mRank").textContent=rank(state.highestFloor);$("mFloor").textContent=`Floor ${state.highestFloor} / 100`;
+ $("mHeroes").textContent=state.heroes.length;$("mGold").textContent=state.gold.toLocaleString();$("mGems").textContent=state.gems.toLocaleString();
+ $("topFloor").textContent=`${state.highestFloor} / 100`;$("happiness").textContent=state.town.happiness+"%";$("fear").textContent=state.town.fear+"%";$("mood").textContent=state.fairy.mood;
+ document.querySelectorAll(".nav [data-open]").forEach(b=>b.classList.toggle("active",b.dataset.open===page));
+ 
+ const pages={
+ overview:`<h2>Main Menu</h2><div class="sub">Aetheria command center — Update 0.1.8</div>
+ <div class="notice"><b>MASTER PROGRESSION:</b> Update 0.1.8 implements the complete Party Management System featuring up to 20 parties, 3 Front + 2 Back slots, 5 Medical slots, Fairy recommendations with AGREE/DECLINE prompts, and automatic AVAILABLE/BUSY roster synchronization. Recruitment now correctly initializes heroes at Lv. 1.</div>
+ <div class="status-hero"><div class="status-banner"><small>MASTER RANK</small><strong>${state.masterRank}</strong><small>${state.masterTitle}</small></div><div class="status-banner"><small>TOWER PROGRESS</small><strong>${state.highestFloor} / 100</strong><small>Current Floor ${state.currentFloor}</small></div></div>
+ <div class="grid">
+  ${cmd("status","◈","Master Status","Rank, tower, economy, town condition and warnings.")}
+  ${cmd("database","📖","Data Base","Comprehensive catalog of Skills, Ultimate Skills, Traits, and Enemy Bestiary.")}
+  ${cmd("recruitmentMenu","✦","Recruitment Portal","Recruit heroes at Lv.1 using Gold, Gems, Tickets, or Special Tickets.")}
+  ${cmd("recruitment","✦","Recruitment Log","Review recruitment history and noble arrivals.")}
+  ${cmd("heroes","♙","Hero Roster","Advanced filtering, identity, stats, EXP, and equipment slots.")}
+  ${cmd("party","⚔","Party Management","Create and manage up to 20 parties with formations and medical slots.")}
+  ${cmd("inventory","▣","Inventory","Equipment, materials and resource overview.")}
+  ${cmd("town","⌂","Town Square","Facilities, happiness, fear, recovery and Skip Day report.")}
+  ${cmd("dungeon","◇","Dungeon","Pre-battle analysis, risk assessment and battle reports.")}
+  ${cmd("fairy","✦","Fairy AI","Living companion memory, mood, trust and knowledge.")}
+ </div>
+ <div class="conf"><b>FAIRY ADVISORY</b><br>${fairyText()}<br><small>Confidence: HIGH</small></div>`,
+ status:`<h2>Master Status</h2><div class="sub">All values are synchronized from the current Game State.</div><div class="status-hero"><div class="status-banner"><small>MASTER RANK</small><strong>${state.masterRank}</strong><small>${state.masterTitle}</small></div><div class="status-banner"><small>MASTER ID</small><strong style="font-size:15px">${state.masterId||"MASTER-000000"}</strong><small>${state.masterName||"MASTER"}</small></div></div><div class="info">
+ ${item("Master Name",state.masterName||"MASTER")}${item("Master Rank",state.masterRank)}${item("Master Title",state.masterTitle)}${item("Highest Tower Floor",state.highestFloor)}${item("Current Tower Floor",state.currentFloor)}${item("Total Heroes",c.total)}${item("Available Heroes",c.available)}${item("Heroes in Party",c.inParty)}${item("Injured",c.injured)}${item("Dead",c.dead)}${item("Total Parties",state.parties.length)}${item("Party Capacity",`${state.parties.length} / 20`)}${item("Gold",state.gold.toLocaleString())}${item("Gems",state.gems.toLocaleString())}${item("Tickets",state.tickets)}${item("Special Tickets",state.specialTickets)}${item("Town Happiness",state.town.happiness+"%")}${item("Town Fear",state.town.fear+"%")}${item("In-game Day",state.day||1)}
+ </div><div class="rank-up"><b>RANK PROGRESSION</b><div class="rank-table">${MASTER_RANKS.map(x=>`<div class="rank-row"><span>Floor ${x.min}${x.rank==="MASTER"?"":"–"+(x.min+9)}</span><b>${x.rank}</b></div>`).join("")}</div></div><div class="conf"><b>FAIRY ANALYSIS</b><br>${fairyStatus()}</div>`,
+ recruitmentMenu:`<h2>Recruitment Portal</h2><div class="sub">Summon powerful survivors and nobles using resources. All newly recruited heroes start at Level 1.</div>
+ <div class="info">
+   ${item("Gold", state.gold.toLocaleString())}
+   ${item("Gems", state.gems.toLocaleString())}
+   ${item("Tickets", state.tickets)}
+   ${item("Special Tickets", state.specialTickets)}
+ </div>
+ <div class="grid" style="margin-top:15px">
+   <div class="command" onclick="performRecruitment('gold')"><div class="icon">🪙<span class="badge">1,000 G</span></div><h3>Gold Recruitment</h3><p>Chance to get ★1 – ★3 heroes (Lv. 1).</p></div>
+   <div class="command" onclick="performRecruitment('gems')"><div class="icon">💎<span class="badge">100 GEMS</span></div><h3>Gem Recruitment</h3><p>Chance to get ★1 – ★4 heroes (Lv. 1).</p></div>
+   <div class="command" onclick="performRecruitment('tickets')"><div class="icon">🎟️<span class="badge">1 TICKET</span></div><h3>Ticket Recruitment</h3><p>Guaranteed ★2 – ★4 heroes (Lv. 1).</p></div>
+   <div class="command" onclick="performRecruitment('special')"><div class="icon">🌟<span class="badge">1 SP.TICKET</span></div><h3>Special Recruitment</h3><p>Guaranteed ★5 Legendary Mythic Hero at Lv. 1.</p></div>
+ </div>`,
+ database:`<h2>Aetheria Data Base</h2><div class="sub">Official compendium of skills, ultimate abilities, character traits, and enemy catalog.</div>
+ <div class="db-section">
+   <h3>50 ID Basic Skills</h3>
+   <div class="db-grid">${dbBasicSkills.map(s=>`<div class="db-card"><b>${s.id} | ${s.name}</b><p><b>Target:</b> ${s.target}<br>${s.desc}</p></div>`).join("")}</div>
+ </div>
+ <div class="db-section">
+   <h3>30 ID Ultimate Skills</h3>
+   <div class="db-grid">${dbUltimateSkills.map(s=>`<div class="db-card"><b>${s.id} | ${s.name}</b><p><b>Cost:</b> ${s.cost} | <b>Target:</b> ${s.target}<br>${s.desc}</p></div>`).join("")}</div>
+ </div>
+ <div class="db-section">
+   <h3>30 ID Traits (Passive Abilities)</h3>
+   <div class="db-grid">${dbTraits.map(t=>`<div class="db-card"><b>${t.id} | ${t.name}</b><p>${t.desc}</p></div>`).join("")}</div>
+ </div>
+ <div class="db-section">
+   <h3>Enemy Bestiary</h3>
+   <div class="db-grid">${dbEnemies.map(e=>`<div class="db-card"><b>${e.id} | ${e.name}</b><p><b>Type:</b> ${e.type} | <b>Element:</b> ${e.element}<br><b>Stats:</b> ${e.stats}<br>${e.desc}</p></div>`).join("")}</div>
+ </div>`,
+ recruitment:`<h2>Recruitment Log</h2><div class="sub">Type • Cost • Hero ID • Name • Race • Role • Star • New/Duplicate • Result</div>
+ <div class="log">${(state.recruitmentLog.length?state.recruitmentLog: [{type:"SYSTEM",cost:"—",heroId:"—",name:"No recruitment yet",race:"—",role:"—",star:"—",result:"WAITING"}]).slice().reverse().map(x=>`<div class="log-item"><strong>${x.type}</strong> · ${x.cost}<br>${x.heroId} — ${x.name} · ${x.race} · ${x.role} · ${x.star}<br>${x.newDuplicate||"NEW"} · ${x.result}</div>`).join("")}</div>
+ <div class="conf"><b>FAIRY RECRUITMENT ANALYSIS</b><br>${state.recruitmentLog.length?"I can compare star distribution, results, and duplicate trends as more recruitment data accumulates.":"No recruitment trend exists yet. I will begin learning from the first result."}</div>`,
+ heroes:heroPage(),
+ party:partyPage(),
+ inventory:`<h2>Inventory</h2><div class="sub">Equipment and materials available to the Master.</div><div class="info">${item("Equipment",state.equipment.length)}${item("Materials",state.materials.length)}${item("Gold",state.gold.toLocaleString())}${item("Medical","Ready")}</div>`,
+ town:`<h2>Town Square</h2><div class="sub">Facilities unlock and upgrade automatically with permanent Master Rank.</div><div class="info">${item("Happiness",state.town.happiness+"%")}${item("Fear",state.town.fear+"%")}${Object.entries(state.town.facilities).map(([n,f])=>item(n,`Unlock ${f.rank} · Lv.${f.level}`)).join("")}</div><button class="btn primary" style="margin-top:12px" onclick="skipDay()">SKIP DAY</button>
+ <div class="conf"><b>FAIRY TOWN REPORT</b><br>${state.town.happiness>=60?"The town feels hopeful.":"The town is fragile. Small decisions may affect morale."}</div>`,
+ dungeon:`<h2>Dungeon</h2><div class="sub">Before entering, Fairy evaluates the current state.</div><div class="info">${item("Enemy Strength","Unknown — scout required")}${item("Party Strength",partyStrength())}${item("Risk Level",state.heroes.length?"MEDIUM":"CRITICAL")}${item("Medical","Ready")}</div><button class="btn primary" style="margin-top:12px" onclick="preBattle()">RUN PRE-BATTLE ANALYSIS</button>
+ <div class="conf"><b>FAIRY RULE</b><br>If estimated victory is too low, Fairy will explicitly say <span class="danger">DO NOT ENTER</span>.</div>`,
+ fairy:`<h2>Fairy System — Aetheria</h2><div class="sub">Living companion state.</div><div class="info">${item("Mood",state.fairy.mood)}${item("Personality",state.fairy.personality)}${item("Trust",state.fairy.trust)}${item("Knowledge",state.fairy.knowledge)}${item("Memories",state.fairy.memory.length)}${item("Mistakes Remembered",state.fairy.mistakes)}</div>
+ <div class="conf"><b>CURRENT THOUGHT</b><br>${fairyText()}<br><br><b>Core rule:</b> recommendations use only the current Game State and AVAILABLE heroes.</div>`
+ };
+ $("content").innerHTML=pages[page]||pages.overview;
+}
+function cmd(page,icon,title,desc){return `<div class="command" onclick="renderHub('${page}')"><div class="icon">${icon}<span class="badge">OPEN</span></div><h3>${title}</h3><p>${desc}</p></div>`}
+function item(a,b){return `<div class="info-item"><small>${a}</small><b>${b}</b></div>`}
+function fairyText(){if(!state.heroes.length)return "Master, we have no heroes yet. I won't recommend anyone until an AVAILABLE hero exists.";if(state.town.fear>70)return "Master, the town is afraid. I recommend stabilizing it before taking unnecessary risks.";return "The current state is stable. I will continue learning from your decisions."}
+function fairyStatus(){let w=[];if(state.gold<500)w.push("Gold is getting low.");if(state.town.fear>50)w.push("Town Fear is elevated.");if(!w.length)w.push("No critical warning detected.");return w.join(" ")}
+function partyStrength(){let av=state.heroes.filter(h=>h.status==="AVAILABLE");return av.length?Math.min(99,40+av.reduce((a,h)=>a+h.star*7+h.level,0))+"%":"0%"}
+function preBattle(){let av=state.heroes.filter(h=>h.status==="AVAILABLE");let victory=Math.min(95,35+av.length*10+av.reduce((a,h)=>a+h.star*3,0));let risk=victory<50?"CRITICAL":victory<70?"HIGH":victory<85?"MEDIUM":"LOW";let safe=victory>=60;openModal("Pre-Battle Recommendation",`<div class="info">${item("Victory Estimate",victory+"%")}${item("Survival Estimate",Math.max(10,victory-8)+"%")}${item("Risk Level",risk)}${item("Recommended Party",av.slice(0,5).map(h=>h.name).join(", ")||"None")}</div><div class="conf"><b>FAIRY DECISION</b><br>${safe?"I recommend entering only if the selected formation remains AVAILABLE and healthy.":"<span class='danger'>DO NOT ENTER.</span> The current probability is too low for a responsible recommendation."}<br><br><b>Confidence:</b> ${av.length>=3?"MEDIUM":"LOW"}</div>`)}
+function skipDay(){let recovered=state.heroes.filter(h=>h.status!=="AVAILABLE").length;state.heroes.forEach(h=>{h.status="AVAILABLE";h.condition="Healthy";h.hp=h.maxHp});state.town.happiness=Math.min(100,state.town.happiness+2);state.town.fear=Math.max(0,state.town.fear-1);state.skipDayReports.push({date:new Date().toISOString(),recovered,happiness:state.town.happiness,fear:state.town.fear});state.fairy.mood="PROUD";state.fairy.memory.push("Skip Day: heroes recovered and town condition changed.");fairySay("A new day has passed, Master. The heroes are recovering, and the town feels a little steadier.");renderHub("town");}
+function openModal(title,body){$("modalTitle").textContent=title;$("modalBody").innerHTML=body;$("modal").classList.add("show")}
+function closeModal(){$("modal").classList.remove("show")}
+
+function showSave(){
+  let s=saves();
+  openModal("Continue / Save & Delete Management",`<div class="grid">${Object.keys(s).map(i=>`<div style="display:flex;flex-direction:column;gap:5px;"><button class="btn" onclick="${s[i]?`loadSlot(${i})`:`saveSlot(${i})`}">SLOT ${i}<br><small>${s[i]?`${s[i].masterName} · Floor ${s[i].highestFloor}`:"EMPTY"}</small></button>${s[i]?`<button class="btn danger" style="padding:6px;font-size:10px;" onclick="deleteSlot(${i})">DELETE SAVE</button>`:""}</div>`).join("")}</div>`);
+}
+window.saveSlot=i=>{save(i);openModal("Saved",`Game saved to Slot ${i} with 1,000,000 Gold, 1,000,000 Gems, 100 Tickets, 100 Special Tickets.`);checkContinue()}
+window.loadSlot=i=>{let s=saves();if(!s[i])return;state=JSON.parse(JSON.stringify(s[i]));state.version="0.1.8";syncMaster();activeSlot=i;closeModal();show("hub")}
+window.deleteSlot=i=>{let s=saves();s[i]=null;writeSaves(s);openModal("Deleted",`Save Slot ${i} has been deleted.`);checkContinue();setTimeout(showSave,1000);}
+
+function checkContinue(){$("continue").disabled=!Object.values(saves()).some(Boolean)}
+
+$("newGame").onclick=()=>{
+  state=createFreshState();
+  storyIndex=0;
+  $("storyText").textContent=story[0];
+  show("story");
+}
+
+$("next").onclick=()=>{storyIndex++;if(storyIndex>=story.length){show("creation")}else $("storyText").textContent=story[storyIndex]}
+$("skip").onclick=()=>{storyIndex=story.length-1;$("storyText").textContent=story[storyIndex]}
+$("confirm").onclick=()=>{
+  let n=$("masterName").value.trim();
+  if(n.length<3||n.length>20){$("error").textContent="Master name must be 3–20 characters.";return}
+  $("error").textContent="";
+  state.masterName=n;
+  state.masterId="MASTER-"+Math.floor(100000+Math.random()*900000);
+  state.createdAt=new Date().toISOString().slice(0,10);
+  state.lastSaved=new Date().toISOString().slice(0,10);
+  save(1);
+  activeSlot=1;
+  fairySay("Master, I'm online. I will observe, remember, and warn you when your strategy is unsafe.");
+  show("hub");
+}
+$("continue").onclick=()=>{let s=saves();let k=Object.keys(s).find(k=>s[k]);if(k)loadSlot(k)}
+$("loadSave").onclick=showSave;$("saveHub").onclick=showSave;
+$("settings").onclick=()=>openModal("Settings","Settings will be expanded in a later update. Core save data is preserved in this version.");
+
+$("exit").onclick=()=>{
+  if(confirm("Are you sure you want to exit the game?")) {
+    window.close();
+    document.body.innerHTML = "<div style='display:grid;place-items:center;height:100vh;background:#05070d;color:#eaf0ff;text-align:center;'><h2>Aetheria Session Terminated.</h2><p>You can close this browser tab manually.</p></div>";
+  }
+};
+
+$("logout").onclick=()=>{
+  if(confirm("Return to Main Menu (Title Screen)? Make sure your game is saved.")) {
+    show("title");
+  }
+};
+
+document.querySelectorAll(".nav [data-open]").forEach(b=>b.onclick=()=>renderHub(b.dataset.open));
+checkContinue();
+</script>
+</body>
+</html>
